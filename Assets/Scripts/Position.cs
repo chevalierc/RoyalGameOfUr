@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-public class Position : System.Object {
+public struct Position {
     public int x;
     public int y;
 
@@ -16,9 +16,52 @@ public class Position : System.Object {
         this.y = p.y;
     }
 
+    public Position(Vector3 p) {
+        this.x = (int)(p.x);
+        this.y = (int)(p.y);
+    }
+
+    public Position(Vector2 p) {
+        this.x = (int)(p.x);
+        this.y = (int)(p.y);
+    }
+
+    public Vector2 toVector2() {
+        return new Vector2(this.x, this.y);
+    }
+
+    public Vector3 toVector3() {
+        return new Vector3(this.x, this.y, 0);
+    }
+
     public int manhattanDistanceTo(Position p2) {
         return Mathf.Abs(p2.x - this.x) + Mathf.Abs(p2.y - this.y);
     }
+
+    //overloads
+    public override string ToString() {
+        return "(" + this.x + ", " + this.y + ")";
+    }
+
+    public static Position operator +(Position p1, Position p2) {
+        p1.x += p2.x;
+        p1.y += p2.y;
+        return p1;
+    }
+
+    public static Position operator *(Position p1, int s) {
+        p1.x *= s;
+        p1.y *= s;
+        return p1;
+    }
+
+    public static Position operator *(Position p1, Position p2) {
+        p1.x *= p2.x;
+        p1.y *= p2.y;
+        return p1;
+    }
+
+    //equality overloads
 
     public static bool operator !=(Position a, Position b) {
         return !(a == b);
@@ -46,7 +89,7 @@ public class Position : System.Object {
         }
 
         // If parameter cannot be cast to Point return false.
-        Position p = obj as Position;
+        Position p = new Position((Position)obj);
         if ((System.Object)p == null) {
             return false;
         }

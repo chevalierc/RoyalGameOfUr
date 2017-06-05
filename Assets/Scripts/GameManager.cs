@@ -4,15 +4,17 @@ using UnityEngine;
 
 public class GameManager : MonoBehaviour {
     public GameObject tile;
-    public GameObject piece;
+    public GameObject piecePrefab;
 
     private GameObject[] board;
     private float tileWidth;
+    private GameObject piece; 
 
     // Use this for initialization
     void Start () {
         tileWidth = (float)tile.GetComponent<Renderer>().bounds.size.x;
         initBoardTiles();
+        initPieces();
     }
 	
 	// Update is called once per frame
@@ -20,17 +22,17 @@ public class GameManager : MonoBehaviour {
 		
 	}
 
-    public void onClick(Position position) {
-        Debug.Log("click");
+    public void onClick(Position clickPosition) {
+        Position start = piece.GetComponent<Piece>().position;
+        Queue<Position> directions = Board.getPathFrom(start, clickPosition);
+        piece.GetComponent<Piece>().move(directions);
     }
 
     private void initPieces() {
-        GameObject newPiece = piece;
-        newPiece.GetComponent<Tile>().position = new Position(0, 3);
-        newPiece.GetComponent<Tile>().gameManager = this;
-
-        Vector3 location = new Vector3(0 * tileWidth, 3 * tileWidth, 0f);
-        GameObject instance = Instantiate(newPiece, location, Quaternion.identity) as GameObject;
+        GameObject newPiece = piecePrefab;
+        Vector3 location = new Vector3(3 * tileWidth, 0 * tileWidth, 0f);
+        piece = Instantiate(newPiece, location, Quaternion.identity) as GameObject;
+        piece.GetComponent<Piece>().position = new Position(3, 0);
     }
 
     private void initBoardTiles() {
@@ -41,11 +43,10 @@ public class GameManager : MonoBehaviour {
                 }
 
                 GameObject newTile = tile;
-                newTile.GetComponent<Tile>().position = new Position(x, y);
-                newTile.GetComponent<Tile>().gameManager = this;
-
                 Vector3 location = new Vector3(x * tileWidth, y * tileWidth, 0f);
                 GameObject instance = Instantiate(newTile, location, Quaternion.identity) as GameObject;
+                instance.GetComponent<Tile>().position = new Position(x, y);
+                instance.GetComponent<Tile>().gameManager = this;
             }
         }
     }

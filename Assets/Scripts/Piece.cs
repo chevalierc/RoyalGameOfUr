@@ -11,6 +11,7 @@ public class Piece : MonoBehaviour {
 
     private Rigidbody2D rb2d;
     private SpriteRenderer spriteRenderer;
+    private Queue<Position> directions;
 
     public void setAsAi(bool asAI) {
         if (asAI) {
@@ -27,11 +28,15 @@ public class Piece : MonoBehaviour {
         rb2d = GetComponent<Rigidbody2D>();
     }
 
-    public void move(Vector3 end) {
-        StartCoroutine(SmoothMovement(end));
+    public void move(Queue<Position> directions) {
+        this.directions = directions;
+        StartCoroutine(SmoothMovement());
     }
 
-    public IEnumerator SmoothMovement(Vector3 end) {
+    public IEnumerator SmoothMovement() {
+        Position endPosition = directions.Dequeue();
+        this.position = endPosition;
+        Vector3 end = new Vector3((float)(endPosition.x * 1.28), (float)(endPosition.y * 1.28), 0);
         float inverseMoveTime = 1f / moveTime;
         float sqrRemainingDistance = (transform.position - end).sqrMagnitude;
         while (sqrRemainingDistance > float.Epsilon) {
@@ -39,6 +44,9 @@ public class Piece : MonoBehaviour {
             rb2d.MovePosition(newPosition);
             sqrRemainingDistance = (transform.position - end).sqrMagnitude;
             yield return null;
+        }
+        if(directions.Count != 0) {
+            StartCoroutine(SmoothMovement());
         }
 
     }
