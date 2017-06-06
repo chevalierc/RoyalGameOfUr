@@ -7,7 +7,8 @@ public class Piece : MonoBehaviour {
     public Sprite aiSprite;
     public Sprite playerSprite;
     public float moveTime = 0.1f;
-    public bool isAI = false;
+    public bool isAi = false;
+    public GameManager gameManager;
 
     private Rigidbody2D rb2d;
     private SpriteRenderer spriteRenderer;
@@ -15,10 +16,10 @@ public class Piece : MonoBehaviour {
 
     public void setAsAi(bool asAI) {
         if (asAI) {
-            this.isAI = true;
+            this.isAi = true;
             spriteRenderer.sprite = aiSprite;
         } else {
-            this.isAI = false;
+            this.isAi = false;
             spriteRenderer.sprite = playerSprite;
         }
     }
@@ -39,14 +40,19 @@ public class Piece : MonoBehaviour {
         Vector3 end = new Vector3((float)(endPosition.x * 1.28), (float)(endPosition.y * 1.28), 0);
         float inverseMoveTime = 1f / moveTime;
         float sqrRemainingDistance = (transform.position - end).sqrMagnitude;
+        Vector3 middle = ((Vector3)(rb2d.position) + end) / 2;
         while (sqrRemainingDistance > float.Epsilon) {
-            Vector3 newPosition = Vector3.MoveTowards(rb2d.position, end, inverseMoveTime * Time.deltaTime);
+            //get the inverse distance to middle
+            float inverseDistanceToMiddle = 1 / ( Mathf.Abs(rb2d.position.x - middle.x) + Mathf.Abs(rb2d.position.y - middle.y) ); //this feels a little off durring gameplay.
+            Vector3 newPosition = Vector3.MoveTowards(rb2d.position, end, inverseMoveTime * Time.deltaTime * inverseDistanceToMiddle); //I think I dont understand this code and that why its off.
             rb2d.MovePosition(newPosition);
             sqrRemainingDistance = (transform.position - end).sqrMagnitude;
             yield return null;
         }
         if(directions.Count != 0) {
             StartCoroutine(SmoothMovement());
+        }else {
+            gameManager.endTurn();
         }
 
     }
