@@ -11,7 +11,7 @@ public class GameManager : MonoBehaviour {
     public GameObject bagPrefab;
     public GameObject rollDisplay;
 
-    private float tileWidth = 3f;
+    private float tileWidth = 3.05f;
     private Vector2 boardOffset;
     private Board board;
     private float scaleRatio;
@@ -22,6 +22,10 @@ public class GameManager : MonoBehaviour {
     private PlayerColor turn = PlayerColor.White;
 
     private PlayerColor[] PlayerColors = new[] { PlayerColor.Black, PlayerColor.White };
+
+    //capture piece
+    bool capturedPieceThisMove = false;
+    GameObject capturedPiece;
 
 
     // Use this for initialization
@@ -61,13 +65,21 @@ public class GameManager : MonoBehaviour {
                 if(turn == PlayerColor.Black) {
                     movePieceFromPool(rollValue, PlayerColor.Black);
                 }
-            } else if (board.isPlayerPiece(clickPosition, turn)) {
+            } else if (board.isPieceOfPlayer(clickPosition, turn)) {
                 move(clickPosition, rollValue, turn);
             }
         }
     }
 
-    public void endTurn() {
+    public void endMove() { 
+        if(capturedPieceThisMove == true){
+            moveCapturedPiece();
+        }else{
+            endTurn();
+        }
+    }
+
+    private void endTurn() {
         pieceIsMoving = false;
         turn++;
         turn = (PlayerColor)((int)turn % 2);
@@ -82,24 +94,64 @@ public class GameManager : MonoBehaviour {
 
     private void move(Position start, int numOfPlaces, PlayerColor color) {
         if (board.isValidMove(start, numOfPlaces, color)) {
+            //get piece to move
+            GameObject piece = board.get(start);
+            //get ending position
             Position end = board.getLandingPositionFrom(start, numOfPlaces, color);
+            //get directions for piece
             Queue<Position> directions = Board.getPathFrom(start, end, color);
-            board.move(start, end);
-            GameObject piece = board.get(end);
+            //tell piece to move
             piece.GetComponent<Piece>().move(directions);
             pieceIsMoving = true;
-        }else {
-            Debug.Log("no");
+            //check if landing on oponent piece
+            if(board.isOponentPiece(end, color)) {
+                capturePiece(end, color);
+            }
+            //move ref in gameBoard class
+            board.move(start, end);
+        } else {
+            Debug.Log("Invalid move");
         }
     }
 
+    private void capturePiece(Position capturePosition, PlayerColor color) {
+        GameObject opponentPiece = board.get(capturePosition);
+        capturedPieceThisMove = true;
+        capturedPiece = opponentPiece;
+        board.set(capturePosition, null);
+    }
+
+    private void moveCapturedPiece() {
+        PlayerColor opponentColor = capturedPiece.GetComponent<Piece>().color;
+        int placedAt = pools[(int)opponentColor].add(capturedPiece);
+        Vector2 position;
+        if (opponentColor == PlayerColor.Black) {
+            position = new Vector2(4.5f + (placedAt / 5f), 0.5f);
+        } else {
+            position = new Vector2(4.5f + (placedAt / 5f), 2.5f);
+        }
+        Vector2 location = (position * tileWidth) - boardOffset;
+        capturedPiece.GetComponent<Piece>().move(location);
+        capturedPieceThisMove = false;
+    }
+
     private void movePieceFromPool(int numOfPlaces, PlayerColor color){
-        GameObject piece = pools[(int) color].getPiece();
-        Position end = board.getLandingPositionFrom(null, numOfPlaces, color);
-        Queue<Position> directions = Board.getPathFrom(null, end, color);
-        board.set(end, piece);
-        piece.GetComponent<Piece>().move(directions);
-        pieceIsMoving = true;
+        if (board.isValidMove(null, numOfPlaces, color) ){
+            //get piece to move
+            GameObject piece = pools[(int)color].getPiece();
+            //get ending position
+            Position end = board.getLandingPositionFrom(null, numOfPlaces, color);
+            //get directions to end
+            Queue<Position> directions = Board.getPathFrom(null, end, color);
+            //set piece to move
+            piece.GetComponent<Piece>().move(directions);
+            pieceIsMoving = true;
+            //set ref in gameBoard class
+            board.set(end, piece);
+        } else {
+            Debug.Log("Invalid move");
+        }
+
     }
 
     public void createPools() {
@@ -116,7 +168,9 @@ public class GameManager : MonoBehaviour {
                 GameObject newPiece = piecePrefab;
                 GameObject instance = Instantiate(newPiece, location, Quaternion.identity) as GameObject;
                 instance.GetComponent<Piece>().gameManager = this;
+                instance.transform.Rotate(0.0f, 0.0f, Random.Range(0.0f, 360.0f));
                 instance.GetComponent<Piece>().setColor(color);
+                Debug.Log(instance.GetComponent<Piece>().color);
                 instance.transform.localScale = new Vector3(scaleRatio, scaleRatio, 0);
                 pools[(int)color].add(instance);
             }

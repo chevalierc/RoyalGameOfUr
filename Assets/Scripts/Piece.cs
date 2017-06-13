@@ -14,7 +14,7 @@ public class Piece : MonoBehaviour {
     private Queue<Position> directions;
 
     public void setColor(PlayerColor color) {
-        this.color = PlayerColor.Black;
+        this.color = color;
         if (color == PlayerColor.Black) {
             spriteRenderer.sprite = blackSprite;
         } else {
@@ -32,7 +32,27 @@ public class Piece : MonoBehaviour {
         StartCoroutine(SmoothMovement());
     }
 
-    public IEnumerator SmoothMovement() {
+    public void move(Vector3 end) {
+        StartCoroutine(SmoothMovement(end));
+    }
+
+    private IEnumerator SmoothMovement(Vector3 end) {
+        gameObject.GetComponent<Renderer>().sortingLayerName = "MovingPiece";
+        float inverseMoveTime = 5f / moveTime;
+        float sqrRemainingDistance = (transform.position - end).sqrMagnitude;
+        while (sqrRemainingDistance > float.Epsilon) {
+            //get the inverse distance to middle
+            Vector3 newPosition = Vector3.MoveTowards(rb2d.position, end, inverseMoveTime * Time.deltaTime); //I think I dont understand this code and that why its off.
+            rb2d.MovePosition(newPosition);
+            sqrRemainingDistance = (transform.position - end).sqrMagnitude;
+            yield return null;
+        }
+        gameObject.GetComponent<Renderer>().sortingLayerName = "Piece";
+        gameManager.endMove();
+    }
+
+    private IEnumerator SmoothMovement() {
+        gameObject.GetComponent<Renderer>().sortingLayerName = "MovingPiece";
         Position endPosition = directions.Dequeue();
         Vector3 end = gameManager.positionToVector(endPosition);
         float inverseMoveTime = 1f / moveTime;
@@ -49,8 +69,9 @@ public class Piece : MonoBehaviour {
         if(directions.Count != 0) {
             StartCoroutine(SmoothMovement());
         }else {
-            gameManager.endTurn();
+            gameObject.GetComponent<Renderer>().sortingLayerName = "Piece";
+            gameManager.endMove();
         }
-
     }
+
 }

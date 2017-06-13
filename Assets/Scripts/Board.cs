@@ -59,11 +59,20 @@ public class Board  {
         this.set(start, null);
     }
 
-    public bool isPlayerPiece(Position location, PlayerColor color) {
+    public bool isPieceOfPlayer(Position location, PlayerColor color) {
+        GameObject piece = this.get(location);
+        if (piece != null && piece.GetComponent<Piece>().color == color) {
+            return true;
+        }else {
+            return false;
+        }
+    }
+
+    public bool isOponentPiece(Position location, PlayerColor color) {
         GameObject piece = this.get(location);
         if (piece != null && piece.GetComponent<Piece>().color != color) {
             return true;
-        }else {
+        } else {
             return false;
         }
     }
@@ -89,12 +98,14 @@ public class Board  {
 
     public bool isValidMove(Position start, int moves, PlayerColor color) {
         //null piece location means picking from bag
-        Position end = this.getLandingPositionFrom(start, moves, color);
 
+        Position end = this.getLandingPositionFrom(start, moves, color);
+ 
         if(end != null) {
             if(this.get(end) == null) {
                 return true; // landing on free space
             } else if( this.get(end).GetComponent<Piece>().color == color) {
+                Debug.Log("trying to land on same color");
                 return false; //landing on same color
             }else {
                 return true; //capturing piece
