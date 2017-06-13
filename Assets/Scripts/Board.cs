@@ -4,12 +4,11 @@ using UnityEngine;
 
 public class Board  {
     private GameObject[,] pieces;
-    private static Position[] playerPath;
-    private static Position[] aiPath;
+    private static Position[][] paths = new Position[2][];
 
     public Board() {
         pieces = new GameObject[8, 3];
-        playerPath = new Position[] {
+        paths[(int)PlayerColor.Black] = new Position[] {
             new Position(3,0),
             new Position(2,0),
             new Position(1,0),
@@ -25,12 +24,12 @@ public class Board  {
             new Position(7,0),
             new Position(6,0),
         };
-        aiPath = new Position[] {
+        paths[(int)PlayerColor.White] = new Position[] {
             new Position(3,2),
             new Position(2,2),
             new Position(1,2),
-            new Position(0,1),
             new Position(0,2),
+            new Position(0,1),
             new Position(1,1),
             new Position(2,1),
             new Position(3,1),
@@ -44,7 +43,7 @@ public class Board  {
     }
 
     public GameObject get(Position pieceLocation) {
-        if ( pieceLocation.x < this.pieces.GetLength(0) && pieceLocation.y < this.pieces.GetLength(1)) {
+        if ( pieceLocation.x < this.pieces.GetLength(0) && pieceLocation.y < this.pieces.GetLength(1) && pieceLocation.x >= 0 && pieceLocation.y >= 0) {
             return this.pieces[pieceLocation.x, pieceLocation.y];
         }else {
             return null;
@@ -60,22 +59,17 @@ public class Board  {
         this.set(start, null);
     }
 
-    public bool isPlayerPiece(Position location) {
+    public bool isPlayerPiece(Position location, PlayerColor color) {
         GameObject piece = this.get(location);
-        if(piece != null && !piece.GetComponent<Piece>().isAi) {
+        if (piece != null && piece.GetComponent<Piece>().color != color) {
             return true;
         }else {
             return false;
         }
     }
 
-    public Position getLandingPositionFrom(Position start, int moves, bool isAi) {
-        Position[] path;
-        if (isAi) {
-            path = aiPath;
-        } else {
-            path = playerPath;
-        }
+    public Position getLandingPositionFrom(Position start, int moves, PlayerColor color) {
+        Position[] path = paths[(int)color];
 
         int index;
         if (start == null) {
@@ -93,34 +87,27 @@ public class Board  {
         
     }
 
-    public bool isValidMove(Position start, int moves, bool isAi) {
+    public bool isValidMove(Position start, int moves, PlayerColor color) {
         //null piece location means picking from bag
-        Position end = this.getLandingPositionFrom(start, moves,  isAi);
+        Position end = this.getLandingPositionFrom(start, moves, color);
 
         if(end != null) {
             if(this.get(end) == null) {
-                return true; //player/ai landing on free space
-            } else if( isAi &&  this.get(end).GetComponent<Piece>().isAi) {
-                return false; //ai trying to land on ai
-            }else if (!isAi && !this.get(end).GetComponent<Piece>().isAi) {
-                return false; //player trying to land on player
+                return true; // landing on free space
+            } else if( this.get(end).GetComponent<Piece>().color == color) {
+                return false; //landing on same color
             }else {
-                return true; //player/ai capturing piece
+                return true; //capturing piece
             }
         }else {
             return false; //trying to go off the board
         }
     }
 
-    public static Queue<Position> getPathFrom(Position start, Position end, bool isAi) {
+    public static Queue<Position> getPathFrom(Position start, Position end, PlayerColor color) {
         //return points the piece has to move to
         Queue<Position> directions = new Queue<Position>();
-        Position[] path;
-        if (isAi) {
-            path = aiPath;
-        }else {
-            path = playerPath;
-        }
+        Position[] path = paths[(int)color];
         int index = System.Array.FindIndex(path, x => x == start); //find index in path of start position
         Position currentPosition;
         do {

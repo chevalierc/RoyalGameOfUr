@@ -3,24 +3,22 @@ using System.Collections.Generic;
 using UnityEngine;
 
 public class Piece : MonoBehaviour {
-    public Position position;
-    public Sprite aiSprite;
-    public Sprite playerSprite;
+    public Sprite blackSprite;
+    public Sprite whiteSprite;
     public float moveTime = 0.1f;
-    public bool isAi = false;
+    public PlayerColor color;
     public GameManager gameManager;
 
     private Rigidbody2D rb2d;
     private SpriteRenderer spriteRenderer;
     private Queue<Position> directions;
 
-    public void setAsAi(bool asAI) {
-        if (asAI) {
-            this.isAi = true;
-            spriteRenderer.sprite = aiSprite;
+    public void setColor(PlayerColor color) {
+        this.color = PlayerColor.Black;
+        if (color == PlayerColor.Black) {
+            spriteRenderer.sprite = blackSprite;
         } else {
-            this.isAi = false;
-            spriteRenderer.sprite = playerSprite;
+            spriteRenderer.sprite = whiteSprite;
         }
     }
 
@@ -36,8 +34,7 @@ public class Piece : MonoBehaviour {
 
     public IEnumerator SmoothMovement() {
         Position endPosition = directions.Dequeue();
-        this.position = endPosition;
-        Vector3 end = new Vector3((float)(endPosition.x * 1.28), (float)(endPosition.y * 1.28), 0);
+        Vector3 end = gameManager.positionToVector(endPosition);
         float inverseMoveTime = 1f / moveTime;
         float sqrRemainingDistance = (transform.position - end).sqrMagnitude;
         Vector3 middle = ((Vector3)(rb2d.position) + end) / 2;

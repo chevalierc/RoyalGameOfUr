@@ -1,10 +1,13 @@
 fileFormatVersion: 2
 guid: df9dfdd7c04cb6b41a993752103ffb46
-timeCreated: 1496619688
+timeCreated: 1497319674
 licenseType: Free
 MonoImporter:
   serializedVersion: 2
-  defaultReferences: []
+  defaultReferences:
+  - blackSprite: {fileID: 21300000, guid: 3550a9b034d818b4bb356889eb317cd9, type: 3}
+  - whiteSprite: {fileID: 21300000, guid: 6a492a4206d573a4b94e83f0a67b7528, type: 3}
+  - gameManager: {instanceID: 0}
   executionOrder: 0
   icon: {instanceID: 0}
   userData: 
