@@ -42,7 +42,7 @@ public class Piece : MonoBehaviour {
         float sqrRemainingDistance = (transform.position - end).sqrMagnitude;
         while (sqrRemainingDistance > float.Epsilon) {
             //get the inverse distance to middle
-            Vector3 newPosition = Vector3.MoveTowards(rb2d.position, end, inverseMoveTime * Time.deltaTime); //I think I dont understand this code and that why its off.
+            Vector3 newPosition = Vector3.MoveTowards(rb2d.position, end, inverseMoveTime * Time.deltaTime);
             rb2d.MovePosition(newPosition);
             sqrRemainingDistance = (transform.position - end).sqrMagnitude;
             yield return null;
@@ -57,11 +57,14 @@ public class Piece : MonoBehaviour {
         Vector3 end = gameManager.positionToVector(endPosition);
         float inverseMoveTime = 1f / moveTime;
         float sqrRemainingDistance = (transform.position - end).sqrMagnitude;
-        Vector3 middle = ((Vector3)(rb2d.position) + end) / 2;
+        float totalDistance = (transform.position - end).magnitude;
+        Vector3 middle = ((Vector3)(rb2d.position) + end) * .5f;
+        float startScale = gameObject.transform.localScale.x;
         while (sqrRemainingDistance > float.Epsilon) {
-            //get the inverse distance to middle
-            float inverseDistanceToMiddle = 1 / ( Mathf.Abs(rb2d.position.x - middle.x) + Mathf.Abs(rb2d.position.y - middle.y) ); //this feels a little off durring gameplay.
-            Vector3 newPosition = Vector3.MoveTowards(rb2d.position, end, inverseMoveTime * Time.deltaTime * inverseDistanceToMiddle); //I think I dont understand this code and that why its off.
+            float distanceToMiddle = ( Mathf.Abs(middle.x - rb2d.position.x) + Mathf.Abs(middle.y - rb2d.position.y) );
+            float ratioToMiddle = 1 - distanceToMiddle / (totalDistance * .5f); //0 is ends, 1 is middle
+            gameObject.transform.localScale = new Vector3(startScale + ratioToMiddle, startScale + ratioToMiddle, 0);
+            Vector3 newPosition = Vector3.MoveTowards(rb2d.position, end, inverseMoveTime * Time.deltaTime); 
             rb2d.MovePosition(newPosition);
             sqrRemainingDistance = (transform.position - end).sqrMagnitude;
             yield return null;

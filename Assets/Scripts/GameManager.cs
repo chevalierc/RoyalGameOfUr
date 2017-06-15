@@ -10,11 +10,14 @@ public class GameManager : MonoBehaviour {
     public GameObject piecePrefab;
     public GameObject bagPrefab;
     public GameObject rollDisplay;
+    public GameObject dicePrefab;
 
     private float tileWidth = 3.05f;
     private Vector2 boardOffset;
     private Board board;
     private float scaleRatio;
+    private GameObject dice;
+
 
     private bool pieceIsMoving = false;
     private int rollValue;
@@ -33,7 +36,8 @@ public class GameManager : MonoBehaviour {
         board = new Board();
         drawBoard();
         createPools();
-        roll();
+        createDice();
+        rollDisplay.GetComponent<UnityEngine.UI.Text>().text = turn + " 's turn";
     }
 
     private void Update() {
@@ -44,6 +48,20 @@ public class GameManager : MonoBehaviour {
             int y = Mathf.FloorToInt(clickLocation.y / tileWidth);
             onClick(new Position(x, y));
         }
+    }
+
+    public void onDiceRoll(int roll) {
+        rollValue = roll;
+        rollDisplay.GetComponent<UnityEngine.UI.Text>().text = turn + " rolled a " + rollValue;
+        dice.GetComponent<Dice>().setDisabled();
+        if (roll == 0) {
+            StartCoroutine(zeroRoll());
+        }
+    }
+
+    IEnumerator zeroRoll() {
+        yield return new WaitForSeconds(3);
+        endMove();
     }
 
     public Vector2 positionToVector(Position p) {
@@ -71,10 +89,11 @@ public class GameManager : MonoBehaviour {
         }
     }
 
-    public void endMove() { 
-        if(capturedPieceThisMove == true){
+    public void endMove() {
+        if (capturedPieceThisMove == true){
             moveCapturedPiece();
-        }else{
+        } else{
+            dice.GetComponent<Dice>().setActive();
             endTurn();
         }
     }
@@ -84,12 +103,7 @@ public class GameManager : MonoBehaviour {
         turn++;
         turn = (PlayerColor)((int)turn % 2);
         turn = PlayerColors[(int) turn];//there HAS to be a better way to write this
-        roll();
-    }
-
-    private void roll() {
-        rollValue = Random.Range(1, 5);
-        rollDisplay.GetComponent<UnityEngine.UI.Text>().text = turn + "Roll: " + rollValue;
+        rollDisplay.GetComponent<UnityEngine.UI.Text>().text = turn + "'s turn";
     }
 
     private void move(Position start, int numOfPlaces, PlayerColor color) {
@@ -154,6 +168,24 @@ public class GameManager : MonoBehaviour {
 
     }
 
+    private void createDice() {
+        float screenHeight = 2f * Camera.main.orthographicSize;
+        float screenWidth = screenHeight * Camera.main.aspect;
+        float diceWidth = boardPrefab.GetComponent<Renderer>().bounds.size.x;
+        float diceHeight = boardPrefab.GetComponent<Renderer>().bounds.size.y;
+
+        Debug.Log(screenWidth);
+
+        Vector2 location = new Vector2(-(screenWidth - diceWidth) / 2f,-(screenHeight- diceHeight) / 2f);
+        location = Camera.main.ScreenToWorldPoint(location);
+
+        GameObject dice = dicePrefab;
+        GameObject instance = Instantiate(dice, location, Quaternion.identity) as GameObject;
+        instance.GetComponent<Dice>().gameManager = this;
+        //instance.transform.localScale = new Vector3(scaleRatio, scaleRatio, 0);
+        this.dice = instance;
+    }
+
     public void createPools() {
         for (int p = 0; p < PlayerColors.Length; p++) {
             for (int i = 0; i < 6; i++) {
@@ -170,7 +202,6 @@ public class GameManager : MonoBehaviour {
                 instance.GetComponent<Piece>().gameManager = this;
                 instance.transform.Rotate(0.0f, 0.0f, Random.Range(0.0f, 360.0f));
                 instance.GetComponent<Piece>().setColor(color);
-                Debug.Log(instance.GetComponent<Piece>().color);
                 instance.transform.localScale = new Vector3(scaleRatio, scaleRatio, 0);
                 pools[(int)color].add(instance);
             }
@@ -184,9 +215,9 @@ public class GameManager : MonoBehaviour {
         float boardHeight = boardPrefab.GetComponent<Renderer>().bounds.size.y;
 
         //determine a scale for board
-        scaleRatio = screenWidth / (boardWidth + 4);
-        float boardY = 1 -( screenHeight - (scaleRatio * boardHeight) ) / 2;
+        scaleRatio = Mathf.Min( (screenWidth/boardWidth), (screenHeight/boardWidth) );
         tileWidth = tileWidth * scaleRatio;
+        float boardY = -((screenHeight - (scaleRatio * boardHeight)) / 2) + (tileWidth * 1.5f);
 
         //create board to right scale and position
         Vector3 location = new Vector3(0, boardY, 0);
