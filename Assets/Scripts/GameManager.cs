@@ -26,6 +26,8 @@ public class GameManager : MonoBehaviour {
 
     private PlayerColor[] PlayerColors = new[] { PlayerColor.Black, PlayerColor.White };
 
+    private bool extraTurn = false;
+
     //capture piece
     bool capturedPieceThisMove = false;
     GameObject capturedPiece;
@@ -90,12 +92,21 @@ public class GameManager : MonoBehaviour {
     }
 
     public void endMove() {
-        if (capturedPieceThisMove == true){
+        if (capturedPieceThisMove == true) {
             moveCapturedPiece();
-        } else{
+        } else if (extraTurn) {
+            setupExtraTurn();
+        }else { 
             dice.GetComponent<Dice>().setActive();
             endTurn();
         }
+    }
+
+    private void setupExtraTurn() {
+        dice.GetComponent<Dice>().setActive();
+        rollDisplay.GetComponent<UnityEngine.UI.Text>().text = turn + "'s turn";
+        pieceIsMoving = false;
+        extraTurn = false;
     }
 
     private void endTurn() {
@@ -120,6 +131,9 @@ public class GameManager : MonoBehaviour {
             //check if landing on oponent piece
             if(board.isOponentPiece(end, color)) {
                 capturePiece(end, color);
+            }
+            if (board.isRossete(end)) {
+                extraTurn = true;
             }
             //move ref in gameBoard class
             board.move(start, end);

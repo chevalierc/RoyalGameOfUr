@@ -5,6 +5,7 @@ using UnityEngine;
 public class Board  {
     private GameObject[,] pieces;
     private static Position[][] paths = new Position[2][];
+    private static Position[] rosseteLocations;
 
     public Board() {
         pieces = new GameObject[8, 3];
@@ -40,6 +41,13 @@ public class Board  {
             new Position(7,2),
             new Position(6,2),
         };
+        rosseteLocations = new Position[] {
+            new Position(0,0),
+            new Position(0,2),
+            new Position(3,1),
+            new Position(6,0),
+            new Position(6,2)
+        };
     }
 
     public GameObject get(Position pieceLocation) {
@@ -57,6 +65,15 @@ public class Board  {
     public void move(Position start, Position end) {
         this.set(end, this.get(start));
         this.set(start, null);
+    }
+
+    public bool isRossete(Position location) {
+        for(int i = 0; i < rosseteLocations.Length; i++) {
+            if(location == rosseteLocations[i]) {
+                return true;
+            }
+        }
+        return false;
     }
 
     public bool isPieceOfPlayer(Position location, PlayerColor color) {
@@ -98,15 +115,14 @@ public class Board  {
 
     public bool isValidMove(Position start, int moves, PlayerColor color) {
         //null piece location means picking from bag
-
         Position end = this.getLandingPositionFrom(start, moves, color);
- 
         if(end != null) {
-            if(this.get(end) == null) {
+            if (this.get(end) == null) {
                 return true; // landing on free space
-            } else if( this.get(end).GetComponent<Piece>().color == color) {
-                Debug.Log("trying to land on same color");
+            } else if (this.get(end).GetComponent<Piece>().color == color) {
                 return false; //landing on same color
+            }else if (this.isRossete(end) && this.get(end) != null) {
+                return false; //landing on opponent (or self) on rosset
             }else {
                 return true; //capturing piece
             }
