@@ -58,11 +58,13 @@ public class GameManager : MonoBehaviour {
         dice.GetComponent<Dice>().setDisabled();
         if (roll == 0) {
             StartCoroutine(zeroRoll());
+        }else if (board.hasNoMoves(turn, roll)) {
+            StartCoroutine(zeroRoll());
         }
     }
 
     IEnumerator zeroRoll() {
-        yield return new WaitForSeconds(3);
+        yield return new WaitForSeconds(2);
         endMove();
     }
 

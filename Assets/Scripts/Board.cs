@@ -113,6 +113,17 @@ public class Board  {
         
     }
 
+    public bool hasNoMoves(PlayerColor color, int moves) {
+        for(int x = 0; x < pieces.GetLength(0); x++) {
+            for (int y = 0; y < pieces.GetLength(1); y++) {
+                if(isValidMove(new Position(x,y), moves, color)) {
+                    return false;
+                }
+            }
+        }
+        return true;
+    }
+
     public bool isValidMove(Position start, int moves, PlayerColor color) {
         //null piece location means picking from bag
         Position end = this.getLandingPositionFrom(start, moves, color);
