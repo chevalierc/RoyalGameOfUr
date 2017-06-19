@@ -1,4 +1,5 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -50,6 +51,11 @@ public class Board  {
             new Position(6,0),
             new Position(6,2)
         };
+        for (int x = 0; x < pieces.GetLength(0); x++) {
+            for (int y = 0; y < pieces.GetLength(1); y++) {
+                pieces[x, y] = null;
+            }
+        }
     }
 
     public GameObject get(Position pieceLocation) {
@@ -136,6 +142,25 @@ public class Board  {
             }
         }
         return true;
+    }
+
+    public Position[] getPositionsForPlayer(PlayerColor color) {
+        List<Position> positions = new List<Position>();
+        for (int x = 0; x < pieces.GetLength(0); x++) {
+            for (int y = 0; y < pieces.GetLength(1); y++) {
+                GameObject piece = pieces[x, y];
+                try {
+                    Debug.Log(piece.GetComponent<Piece>().color);
+                    Debug.Log(color);
+                    if (piece.GetComponent<Piece>().color == color) {
+                        positions.Add(new Position(x, y));
+                    }
+                }catch(Exception e) {
+                    Debug.Log(e);
+                }
+            }
+        }
+        return positions.ToArray();
     }
 
     public bool isValidMove(Position start, int moves, PlayerColor color) {

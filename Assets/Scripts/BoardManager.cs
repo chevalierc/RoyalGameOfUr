@@ -6,6 +6,7 @@ using UnityEngine.UI;
 public enum PlayerColor { Black, White};
 
 public class BoardManager : MonoBehaviour {
+    private GameManager gameManager;
     public GameObject boardPrefab;
     public GameObject piecePrefab;
     public GameObject bagPrefab;
@@ -14,16 +15,16 @@ public class BoardManager : MonoBehaviour {
 
     public float tileWidth = 3.05f;
     public Vector2 boardOffset;
-    private Board board;
+    public Board board;
     private float scaleRatio;
-    private GameObject dice;
+    public GameObject dice;
 
 
     private bool pieceIsMoving = false;
-    private int rollValue = 0;
+    public int rollValue = 0;
     private Pool[] startingPools = new Pool[2] { new Pool(), new Pool() };
     private Pool[] endingPools = new Pool[2] { new Pool(), new Pool() };
-    private PlayerColor turn;
+    public PlayerColor turn;
 
     private PlayerColor[] PlayerColors = new[] { PlayerColor.Black, PlayerColor.White };
 
@@ -40,6 +41,7 @@ public class BoardManager : MonoBehaviour {
 
     // Use this for initialization
     void Start() {
+        gameManager = gameObject.GetComponent<GameManager>();
         setUpNewGame();
     }
 
@@ -119,6 +121,7 @@ public class BoardManager : MonoBehaviour {
         turn = (PlayerColor)((int)turn % 2);
         turn = PlayerColors[(int) turn];//there HAS to be a better way to write this
         rollDisplay.GetComponent<UnityEngine.UI.Text>().text = turn + "'s turn";
+        gameManager.onEndTurn();
     }
 
     private void move(Position start, int numOfPlaces, PlayerColor color) {

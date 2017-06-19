@@ -60,7 +60,6 @@ public class Piece : MonoBehaviour {
         float totalDistance = (Mathf.Abs(end.x - rb2d.position.x) + Mathf.Abs(end.y - rb2d.position.y));
         Vector3 middle = ((Vector3)(rb2d.position) + end) * .5f;
         float startScale = gameObject.transform.localScale.x;
-        Debug.Log(startScale);
         while (sqrRemainingDistance > float.Epsilon) {
             float distanceToMiddle = ( Mathf.Abs(middle.x - rb2d.position.x) + Mathf.Abs(middle.y - rb2d.position.y) );
             float ratioToMiddle = 1 - distanceToMiddle / (totalDistance * .5f); //0 is ends, 1 is middle
