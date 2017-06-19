@@ -7,7 +7,7 @@ public class Piece : MonoBehaviour {
     public Sprite whiteSprite;
     public float moveTime = 0.1f;
     public PlayerColor color;
-    public GameManager gameManager;
+    public BoardManager boardManager;
 
     private Rigidbody2D rb2d;
     private SpriteRenderer spriteRenderer;
@@ -48,18 +48,19 @@ public class Piece : MonoBehaviour {
             yield return null;
         }
         gameObject.GetComponent<Renderer>().sortingLayerName = "Piece";
-        gameManager.endMove();
+        boardManager.endMove();
     }
 
     private IEnumerator SmoothMovement() {
         gameObject.GetComponent<Renderer>().sortingLayerName = "MovingPiece";
         Position endPosition = directions.Dequeue();
-        Vector3 end = gameManager.positionToVector(endPosition);
+        Vector3 end = boardManager.positionToVector(endPosition);
         float inverseMoveTime = 1f / moveTime;
         float sqrRemainingDistance = (transform.position - end).sqrMagnitude;
-        float totalDistance = (transform.position - end).magnitude;
+        float totalDistance = (Mathf.Abs(end.x - rb2d.position.x) + Mathf.Abs(end.y - rb2d.position.y));
         Vector3 middle = ((Vector3)(rb2d.position) + end) * .5f;
         float startScale = gameObject.transform.localScale.x;
+        Debug.Log(startScale);
         while (sqrRemainingDistance > float.Epsilon) {
             float distanceToMiddle = ( Mathf.Abs(middle.x - rb2d.position.x) + Mathf.Abs(middle.y - rb2d.position.y) );
             float ratioToMiddle = 1 - distanceToMiddle / (totalDistance * .5f); //0 is ends, 1 is middle
@@ -73,7 +74,7 @@ public class Piece : MonoBehaviour {
             StartCoroutine(SmoothMovement());
         }else {
             gameObject.GetComponent<Renderer>().sortingLayerName = "Piece";
-            gameManager.endMove();
+            boardManager.endMove();
         }
     }
 

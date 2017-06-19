@@ -3,17 +3,12 @@ using System.Collections.Generic;
 using UnityEngine;
 
 public class Dice : MonoBehaviour {
-    public GameManager gameManager;
+    public BoardManager boardManager;
     public Sprite enabledSprite;
     public Sprite disabledSprite;
     private bool isEnabled = true;
 
-	// Use this for initialization
-	void Start () {
-	}
-
     void OnMouseDown() {
-        Debug.Log("yo");
         if (isEnabled) {
             rollDice();
         }
@@ -29,11 +24,11 @@ public class Dice : MonoBehaviour {
         isEnabled = false;
     }
 
-    void rollDice() {
+    public void rollDice() {
         int sum = 0;
         for(int i = 0; i < 4; i++) {
             sum += Mathf.RoundToInt( Random.Range(0, 2) );//believe it or not this will return 0 or 1 equally
         }
-        gameManager.onDiceRoll(sum);
+        boardManager.onDiceRoll(sum);
     }
 }

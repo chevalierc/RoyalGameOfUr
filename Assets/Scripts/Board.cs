@@ -24,6 +24,7 @@ public class Board  {
             new Position(7,1),
             new Position(7,0),
             new Position(6,0),
+            new Position(5,0)
         };
         paths[(int)PlayerColor.White] = new Position[] {
             new Position(3,2),
@@ -40,6 +41,7 @@ public class Board  {
             new Position(7,1),
             new Position(7,2),
             new Position(6,2),
+            new Position(5,2)
         };
         rosseteLocations = new Position[] {
             new Position(0,0),
@@ -62,9 +64,21 @@ public class Board  {
         this.pieces[position.x, position.y] = piece;
     }
 
+    public void set(int x, int y, GameObject piece) {
+        this.pieces[x, y] = piece;
+    }
+
     public void move(Position start, Position end) {
         this.set(end, this.get(start));
         this.set(start, null);
+    }
+
+    public bool isEnd(Position position, PlayerColor color) {
+        int pathLength = paths[(int)PlayerColor.Black].Length;
+        if (paths[(int)color][pathLength-1] == position) {
+            return true;
+        }
+        return false;
     }
 
     public bool isRossete(Position location) {
