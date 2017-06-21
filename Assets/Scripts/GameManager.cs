@@ -12,6 +12,18 @@ public class GameManager : MonoBehaviour {
         boardManager = gameObject.GetComponent<BoardManager>();
 	}
 
+    public void startSinglePlayer() {
+        is2p = false;
+        GameObject.FindGameObjectsWithTag("Menu")[0].SetActive(false);
+        boardManager.setUpNewGame();
+    }
+
+    public void startMultiplayer() {
+        is2p = true;
+        GameObject.FindGameObjectsWithTag("Menu")[0].SetActive(false);
+        boardManager.setUpNewGame();
+    }
+
     private void Update() {
         if (Input.GetMouseButtonDown(0)) {
             if (is2p) {
@@ -25,7 +37,7 @@ public class GameManager : MonoBehaviour {
     }
 
     public void onEndTurn() {
-        if( boardManager.turn != playerColor) {
+        if( boardManager.turn != playerColor && !is2p) {
             boardManager.dice.GetComponent<Dice>().rollDice();
             Position bestClick = AI.getBestClick(boardManager, boardManager.turn);
             boardManager.onClick(bestClick);

@@ -42,7 +42,6 @@ public class BoardManager : MonoBehaviour {
     // Use this for initialization
     void Start() {
         gameManager = gameObject.GetComponent<GameManager>();
-        setUpNewGame();
     }
 
     public void setUpNewGame() {
