@@ -37,8 +37,17 @@ public class GameManager : MonoBehaviour {
     }
 
     public void onEndTurn() {
-        if( boardManager.turn != playerColor && !is2p) {
-            boardManager.dice.GetComponent<Dice>().rollDice();
+        if ( boardManager.turn != playerColor && !is2p) {
+            boardManager.dice.GetComponent<Dice>().setDisabled();
+            doAiTurn();
+        } else {
+            boardManager.dice.GetComponent<Dice>().setActive();
+        }
+    }
+
+    private void doAiTurn() {
+        boardManager.dice.GetComponent<Dice>().rollDice();
+        if(boardManager.rollValue != 0) {
             Position bestClick = AI.getBestClick(boardManager, boardManager.turn);
             boardManager.onClick(bestClick);
         }

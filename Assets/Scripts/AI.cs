@@ -4,41 +4,80 @@ using UnityEngine;
 
 public class AI {
 
-    public static Position getBestClick(BoardManager boardManager, PlayerColor myColor) {
+    public static Position getBestClick(BoardManager boardManager, PlayerColor aiColor) {
         Board board = boardManager.board;
         int roll = boardManager.rollValue;
+
         Position bestClick = null;
+        int bestMoveScore = int.MinValue;
 
-        Position[] positions = board.getPositionsForPlayer(myColor);
+        Position[] positions = board.getPositionsForPlayer(aiColor);
 
-        //if all pieces are in pool
-        if(positions.Length == 0) {
-            return new Position(2, -1);
+        //check if you can move piece from pool
+        Debug.Log(boardManager.startingPools[(int)aiColor].count);
+        if (board.isValidMove(null, roll, aiColor) && boardManager.startingPools[(int)aiColor].count != 0) {
+            Position end = board.getLandingPositionFrom(null, roll, aiColor);
+            Board newBoard = new Board(board);
+            newBoard.set(end, aiColor);
+            int boardValue = evalutateBoard(newBoard, aiColor);
+            bestClick = new Position(2, -1);
+            bestMoveScore = boardValue;
         }
 
-        for(int i = 0; i < positions.Length; i++) {
-            if(!board.isValidMove(positions[i], roll, myColor)) {
+        for (int i = 0; i < positions.Length; i++) {
+            Position start = positions[i];
+            if (!board.isValidMove(start, roll, aiColor)) {
                 continue;
             }
 
-            Position end = board.getLandingPositionFrom(positions[i], roll, myColor);
-
-            if (bestClick == null) {
-                bestClick = positions[i];
-            }
-
-            if (board.isRossete(end)) {
-                bestClick = positions[i];
-            }
-
-            if (board.isOponentPiece(end, myColor)) {
-                bestClick = positions[i];
+            Position end = board.getLandingPositionFrom(positions[i], roll, aiColor);
+            Board newBoard = new Board(board);
+            newBoard.move(start, end);
+            int boardValue = evalutateBoard(newBoard, aiColor);
+            if(boardValue > bestMoveScore || bestClick == null) {
+                bestClick = start;
+                bestMoveScore = boardValue;
             }
         }
 
-        Debug.Log(bestClick);
         return bestClick;
     }
+
+    public static int evalutateBoard(Board board, PlayerColor color) {
+        int score = 0;
+        PlayerColor opponentColor = Board.otherColor(color);
+        Position[] myPositions = board.getPositionsForPlayer(color);
+        Position[] opponentPositions = board.getPositionsForPlayer(opponentColor);
+
+        for(int i = 0; i < myPositions.Length; i++) {
+            Position currentPosition = myPositions[i];
+            //if goal add 100
+            if (Board.isGoal(currentPosition)) {
+                score += 100;
+            }
+            //add 10 for being on rossete
+            if (Board.isRossete(currentPosition)) {
+                score += 25;
+            }
+
+            //add 10 for being in safe row, 3 for contested row
+            if (currentPosition.y != 1) {
+                score += 5;
+            }else {
+                score += 3;
+            }
+        }
+
+        for (int i = 0; i < opponentPositions.Length; i++) {
+            Position currentPosition = opponentPositions[i];
+            score -= 20;
+        }
+
+        Debug.Log("Score" + score);
+        return score;
+    }
+
+    /*
 
     private class Node {
         public Move move;
@@ -68,7 +107,7 @@ public class AI {
         }
 
         if (curDepth == maxDepth) {
-            return new Node(null, currentBoard.getBoardScore());
+            return new Node(null, currentBoard.getBoardScore() );
         }
 
         return minMax(currentBoard, aiTurn, alpha, beta, curDepth, maxDepth);
@@ -103,7 +142,6 @@ public class AI {
 
             //set alpha/beta
 
-            /*
             if(isAiTurn) {
                 if(boardValue > beta) {
                     return new Node(move, boardValue);
@@ -119,12 +157,13 @@ public class AI {
                     beta = boardValue;
                 }
             }
-            */
 
 
         }
 
         return minOrMaxNode;
     }
+
+    */
 
 }

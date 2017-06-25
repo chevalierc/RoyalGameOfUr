@@ -3,11 +3,11 @@ using System.Collections.Generic;
 using UnityEngine;
 
 public class Pool {
-    private GameObject[] pool = new GameObject[6];
-    public int count = 6;
+    private GameObject[] pool = new GameObject[7];
+    public int count = 0;
 
     public GameObject getPiece() {
-        for (int i = 0; i < 6; i++) {
+        for (int i = 0; i < 7; i++) {
             if(pool[i] != null) {
                 GameObject piece = pool[i];
                 pool[i] = null;
@@ -19,7 +19,7 @@ public class Pool {
     }
 
     public int add(GameObject piece) {
-        for (int i = 0; i < 6; i++) {
+        for (int i = 0; i < 7; i++) {
             if (pool[i] == null) {
                 pool[i] = piece;
                 count++;

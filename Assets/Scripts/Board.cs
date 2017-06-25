@@ -3,13 +3,15 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
+public enum PlayerColor { Black, White, Free };
+
 public class Board  {
-    private GameObject[,] pieces;
-    private static Position[][] paths = new Position[2][];
+    private PlayerColor[,] pieces;
+    private static Position[][] paths;
     private static Position[] rosseteLocations;
 
-    public Board() {
-        pieces = new GameObject[8, 3];
+    static Board() {
+        paths = new Position[2][];
         paths[(int)PlayerColor.Black] = new Position[] {
             new Position(3,0),
             new Position(2,0),
@@ -51,54 +53,92 @@ public class Board  {
             new Position(6,0),
             new Position(6,2)
         };
-        for (int x = 0; x < pieces.GetLength(0); x++) {
-            for (int y = 0; y < pieces.GetLength(1); y++) {
-                pieces[x, y] = null;
-            }
-        }
     }
 
-    public GameObject get(Position pieceLocation) {
-        if ( pieceLocation.x < this.pieces.GetLength(0) && pieceLocation.y < this.pieces.GetLength(1) && pieceLocation.x >= 0 && pieceLocation.y >= 0) {
-            return this.pieces[pieceLocation.x, pieceLocation.y];
-        }else {
-            return null;
-        }
-    }
-
-    public void set(Position position, GameObject piece) {
-        this.pieces[position.x, position.y] = piece;
-    }
-
-    public void set(int x, int y, GameObject piece) {
-        this.pieces[x, y] = piece;
-    }
-
-    public void move(Position start, Position end) {
-        this.set(end, this.get(start));
-        this.set(start, null);
-    }
-
-    public bool isEnd(Position position, PlayerColor color) {
+    //static
+    public static bool isEnd(Position position, PlayerColor color) {
         int pathLength = paths[(int)PlayerColor.Black].Length;
-        if (paths[(int)color][pathLength-1] == position) {
+        if (paths[(int)color][pathLength - 1] == position) {
             return true;
         }
         return false;
     }
 
-    public bool isRossete(Position location) {
-        for(int i = 0; i < rosseteLocations.Length; i++) {
-            if(location == rosseteLocations[i]) {
+    public static bool isGoal(Position location) {
+        if (location == new Position(5, 2) || location == new Position(5, 0)) {
+            return true;
+        }
+        return false;
+    }
+
+    public static bool isRossete(Position location) {
+        for (int i = 0; i < rosseteLocations.Length; i++) {
+            if (location == rosseteLocations[i]) {
                 return true;
             }
         }
         return false;
     }
 
+    public static PlayerColor otherColor(PlayerColor color) {
+        if(color == PlayerColor.Black) {
+            return PlayerColor.White;
+        }else {
+            return PlayerColor.Black;
+        }
+    }
+
+    //constructors
+    public Board() {
+        pieces = new PlayerColor[8, 3];
+        for (int x = 0; x < pieces.GetLength(0); x++) {
+            for (int y = 0; y < pieces.GetLength(1); y++) {
+                pieces[x, y] = PlayerColor.Free;
+            }
+        }
+    }
+
+    public Board(Board oldBoard) {
+        pieces = new PlayerColor[8, 3];
+        for (int x = 0; x < pieces.GetLength(0); x++) {
+            for (int y = 0; y < pieces.GetLength(1); y++) {
+                pieces[x, y] = oldBoard.get(x,y);
+            }
+        }
+    }
+
+    //getter/setters
+
+    public PlayerColor get(int x, int y) {
+        if (x < this.pieces.GetLength(0) && y < this.pieces.GetLength(1) && x >= 0 && y >= 0) {
+            return this.pieces[x, y];
+        } else {
+            return PlayerColor.Free;
+        }
+    }
+
+    public PlayerColor get(Position pieceLocation) {
+        return this.get(pieceLocation.x, pieceLocation.y);
+    }
+
+    public void set(Position position, PlayerColor piece) {
+        this.pieces[position.x, position.y] = piece;
+    }
+
+    public void set(int x, int y, PlayerColor piece) {
+        this.pieces[x, y] = piece;
+    }
+
+    public void move(Position start, Position end) {
+        this.set(end, this.get(start));
+        this.set(start, PlayerColor.Free);
+    }
+
+    //other
+
     public bool isPieceOfPlayer(Position location, PlayerColor color) {
-        GameObject piece = this.get(location);
-        if (piece != null && piece.GetComponent<Piece>().color == color) {
+        PlayerColor piece = this.get(location);
+        if (piece == color) {
             return true;
         }else {
             return false;
@@ -106,8 +146,8 @@ public class Board  {
     }
 
     public bool isOponentPiece(Position location, PlayerColor color) {
-        GameObject piece = this.get(location);
-        if (piece != null && piece.GetComponent<Piece>().color != color) {
+        PlayerColor piece = this.get(location);
+        if (piece == Board.otherColor(color) ) {
             return true;
         } else {
             return false;
@@ -134,12 +174,15 @@ public class Board  {
     }
 
     public bool hasNoMoves(PlayerColor color, int moves) {
-        for(int x = 0; x < pieces.GetLength(0); x++) {
-            for (int y = 0; y < pieces.GetLength(1); y++) {
-                if(isValidMove(new Position(x,y), moves, color)) {
-                    return false;
-                }
+        Position[] positions = getPositionsForPlayer(color);
+        for (int i = 0; i < positions.Length; i++) {
+            if (isValidMove(positions[i], moves, color)) {
+                return false;
             }
+        }
+        //check if moving from starting pool is possible
+        if (isValidMove(null, moves, color)) {
+            return false;
         }
         return true;
     }
@@ -148,15 +191,8 @@ public class Board  {
         List<Position> positions = new List<Position>();
         for (int x = 0; x < pieces.GetLength(0); x++) {
             for (int y = 0; y < pieces.GetLength(1); y++) {
-                GameObject piece = pieces[x, y];
-                try {
-                    Debug.Log(piece.GetComponent<Piece>().color);
-                    Debug.Log(color);
-                    if (piece.GetComponent<Piece>().color == color) {
-                        positions.Add(new Position(x, y));
-                    }
-                }catch(Exception e) {
-                    Debug.Log(e);
+                if (pieces[x, y] == color) {
+                    positions.Add(new Position(x, y));
                 }
             }
         }
@@ -167,11 +203,11 @@ public class Board  {
         //null piece location means picking from bag
         Position end = this.getLandingPositionFrom(start, moves, color);
         if(end != null) {
-            if (this.get(end) == null) {
+            if (this.get(end) == PlayerColor.Free) {
                 return true; // landing on free space
-            } else if (this.get(end).GetComponent<Piece>().color == color) {
+            } else if (this.get(end) == color) {
                 return false; //landing on same color
-            }else if (this.isRossete(end) && this.get(end) != null) {
+            } else if (Board.isRossete(end) && this.get(end) != PlayerColor.Free) {
                 return false; //landing on opponent (or self) on rosset
             }else {
                 return true; //capturing piece
@@ -180,6 +216,8 @@ public class Board  {
             return false; //trying to go off the board
         }
     }
+
+    //piece movement
 
     public static Queue<Position> getPathFrom(Position start, Position end, PlayerColor color) {
         //return points the piece has to move to

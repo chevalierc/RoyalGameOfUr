@@ -3,8 +3,6 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 
-public enum PlayerColor { Black, White};
-
 public class BoardManager : MonoBehaviour {
     private GameManager gameManager;
     public GameObject boardPrefab;
@@ -16,13 +14,13 @@ public class BoardManager : MonoBehaviour {
     public float tileWidth = 3.05f;
     public Vector2 boardOffset;
     public Board board;
+    public GameObject[,] pieces;
     private float scaleRatio;
     public GameObject dice;
 
-
     private bool pieceIsMoving = false;
     public int rollValue = 0;
-    private Pool[] startingPools = new Pool[2] { new Pool(), new Pool() };
+    public Pool[] startingPools = new Pool[2] { new Pool(), new Pool() };
     private Pool[] endingPools = new Pool[2] { new Pool(), new Pool() };
     public PlayerColor turn;
 
@@ -46,6 +44,7 @@ public class BoardManager : MonoBehaviour {
 
     public void setUpNewGame() {
         board = new Board();
+        pieces = new GameObject[8, 3];
         turn = PlayerColor.White;
         drawBoard();
         createPools();
@@ -78,6 +77,8 @@ public class BoardManager : MonoBehaviour {
         return vec;
     }
 
+    //controll
+
     public void onClick(Position clickPosition) {
         if (!pieceIsMoving && rollValue != 0) {
             if( clickPosition == new Position(2,3) || clickPosition == new Position(3,3)) {
@@ -94,39 +95,62 @@ public class BoardManager : MonoBehaviour {
         }
     }
 
+    //turn managment
+
     public void endMove() {
         if (capturedPieceThisMove) {
             moveCapturedPiece();
         } else if (finishPieceThisMove) {
             moveFinishPiece();
         } else if (extraTurn) {
-            setupExtraTurn();
+            extraTurn = false;
+            endTurn();
         } else {
-            dice.GetComponent<Dice>().setActive();
+            turn = Board.otherColor(turn);
             endTurn();
         }
     }
 
-    private void setupExtraTurn() {
-        dice.GetComponent<Dice>().setActive();
-        rollDisplay.GetComponent<UnityEngine.UI.Text>().text = turn + "'s turn";
-        pieceIsMoving = false;
-        extraTurn = false;
-    }
-
     private void endTurn() {
         pieceIsMoving = false;
-        turn++;
-        turn = (PlayerColor)((int)turn % 2);
-        turn = PlayerColors[(int) turn];//there HAS to be a better way to write this
         rollDisplay.GetComponent<UnityEngine.UI.Text>().text = turn + "'s turn";
         gameManager.onEndTurn();
+    }
+
+    //piece movement
+
+    private void movePieceFromPool(int numOfPlaces, PlayerColor color) {
+        if (board.isValidMove(null, numOfPlaces, color)) {
+            //get piece to move
+            GameObject piece = startingPools[(int)color].getPiece();
+            if(piece != null) {
+                //get ending position
+                Position end = board.getLandingPositionFrom(null, numOfPlaces, color);
+                //get directions to end
+                Queue<Position> directions = Board.getPathFrom(null, end, color);
+                //set piece to move
+                piece.GetComponent<Piece>().move(directions);
+                pieceIsMoving = true;
+                //check to see if landed on rosette
+                if (Board.isRossete(end)) {
+                    extraTurn = true;
+                }
+                //set ref in gameBoard class
+                board.set(end, color);
+                pieces[end.x, end.y] = piece;
+            }else {
+                Debug.Log("No pieces left in pool");
+            }
+        } else {
+            Debug.Log("Invalid move");
+        }
+
     }
 
     private void move(Position start, int numOfPlaces, PlayerColor color) {
         if (board.isValidMove(start, numOfPlaces, color)) {
             //get piece to move
-            GameObject piece = board.get(start);
+            GameObject piece = pieces[start.x, start.y];
             //get ending position
             Position end = board.getLandingPositionFrom(start, numOfPlaces, color);
             //get directions for piece
@@ -139,18 +163,22 @@ public class BoardManager : MonoBehaviour {
                 capturePiece(end, color);
             }
             //check if landing on end
-            if(board.isEnd(end, color)) {
+            if(Board.isEnd(end, color)) {
                 finishPiece(piece);
             }
-            if (board.isRossete(end)) {
+            if (Board.isRossete(end)) {
                 extraTurn = true;
             }
-            //move ref in gameBoard class
+            //move ref in gameBoard class and pieces array
             board.move(start, end);
+            pieces[end.x, end.y] = pieces[start.x, start.y];
+            pieces[start.x, start.y] = null;
         } else {
             Debug.Log("Invalid move");
         }
     }
+
+    //events
 
    private void finishPiece(GameObject piece) {
         finishPieceThisMove = true;
@@ -158,10 +186,8 @@ public class BoardManager : MonoBehaviour {
     }
 
     private void capturePiece(Position capturePosition, PlayerColor color) {
-        GameObject opponentPiece = board.get(capturePosition);
+        capturedPiece = pieces[capturePosition.x, capturePosition.y];
         capturedPieceThisMove = true;
-        capturedPiece = opponentPiece;
-        board.set(capturePosition, null);
     }
 
     private void moveFinishPiece() {
@@ -170,10 +196,10 @@ public class BoardManager : MonoBehaviour {
         Vector2 position;
         if (color == PlayerColor.Black) {
             position = new Vector2(6.5f + (placedAt / 6f), -0.5f);
-            board.set(5, 0, null);
+            board.set(5, 0, PlayerColor.Free);
         } else {
             position = new Vector2(6.5f + (placedAt / 6f), 3.5f);
-            board.set(5, 2, null);
+            board.set(5, 2, PlayerColor.Free);
         }
         Vector2 location = (position * tileWidth) - boardOffset;
         pieceToFinish.GetComponent<Piece>().move(location);
@@ -195,32 +221,13 @@ public class BoardManager : MonoBehaviour {
         capturedPieceThisMove = false;
     }
 
-    private void movePieceFromPool(int numOfPlaces, PlayerColor color){
-        if (board.isValidMove(null, numOfPlaces, color) ){
-            //get piece to move
-            GameObject piece = startingPools[(int)color].getPiece();
-            //get ending position
-            Position end = board.getLandingPositionFrom(null, numOfPlaces, color);
-            //get directions to end
-            Queue<Position> directions = Board.getPathFrom(null, end, color);
-            //set piece to move
-            piece.GetComponent<Piece>().move(directions);
-            pieceIsMoving = true;
-            //set ref in gameBoard class
-            board.set(end, piece);
-        } else {
-            Debug.Log("Invalid move");
-        }
-
-    }
+    //initialization
 
     private void createDice() {
         float screenHeight = 2f * Camera.main.orthographicSize;
         float screenWidth = screenHeight * Camera.main.aspect;
         float diceWidth = boardPrefab.GetComponent<Renderer>().bounds.size.x;
         float diceHeight = boardPrefab.GetComponent<Renderer>().bounds.size.y;
-
-        Debug.Log(screenWidth);
 
         Vector2 location = new Vector2(-(screenWidth - diceWidth) / 2f,-(screenHeight- diceHeight) / 2f);
         location = Camera.main.ScreenToWorldPoint(location);
