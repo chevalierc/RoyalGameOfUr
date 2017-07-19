@@ -1,30 +1,45 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.UI;
 
 public class GameManager : MonoBehaviour {
     private BoardManager boardManager;
     private bool is2p = false;
     private PlayerColor playerColor = PlayerColor.White;
 
-	// Use this for initialization
+    bool gameIsBeingPlayed = false;
+
+    GameObject menu;
+    GameObject message;
+    GameObject messageText;
+
 	void Start () {
         boardManager = gameObject.GetComponent<BoardManager>();
-	}
+        menu = GameObject.FindGameObjectWithTag("Menu");
+        message = GameObject.FindGameObjectWithTag("Message");
+        messageText = GameObject.FindGameObjectWithTag("MessageText");
+        message.SetActive(false);
+    }
 
     public void startSinglePlayer() {
         is2p = false;
-        GameObject.FindGameObjectsWithTag("Menu")[0].SetActive(false);
+        menu.SetActive(false);
+        gameIsBeingPlayed = true;
         boardManager.setUpNewGame();
     }
 
     public void startMultiplayer() {
         is2p = true;
-        GameObject.FindGameObjectsWithTag("Menu")[0].SetActive(false);
+        menu.SetActive(false);
+        gameIsBeingPlayed = true;
         boardManager.setUpNewGame();
     }
 
     private void Update() {
+        if(!gameIsBeingPlayed) {
+            return;
+        }
         if (Input.GetMouseButtonDown(0)) {
             if (is2p) {
                 passClickEvent();
@@ -37,11 +52,14 @@ public class GameManager : MonoBehaviour {
     }
 
     public void onEndTurn() {
-        if ( boardManager.turn != playerColor && !is2p) {
-            boardManager.dice.GetComponent<Dice>().setDisabled();
-            doAiTurn();
-        } else {
-            boardManager.dice.GetComponent<Dice>().setActive();
+        checkForGameEnd();
+        if (gameIsBeingPlayed) {
+            if (boardManager.turn != playerColor && !is2p) {
+                boardManager.dice.GetComponent<Dice>().setDisabled();
+                doAiTurn();
+            } else {
+                boardManager.dice.GetComponent<Dice>().setActive();
+            }
         }
     }
 
@@ -59,5 +77,31 @@ public class GameManager : MonoBehaviour {
         int x = Mathf.FloorToInt(clickLocation.x / boardManager.tileWidth);
         int y = Mathf.FloorToInt(clickLocation.y / boardManager.tileWidth);
         boardManager.onClick(new Position(x, y));
+    }
+
+    private void checkForGameEnd() {
+        for(var p = 0; p < boardManager.PlayerColors.Length; p++) {
+            if(boardManager.endingPools[p].full) {
+                gameIsBeingPlayed = false;
+                if ((PlayerColor)p == PlayerColor.Black) {
+                    showMenu("Black Has Won!");
+                } else {
+                    showMenu("White Has Won!");
+                }
+            }
+        }
+    }
+
+
+    private void showMenu(string text) {
+        message.SetActive(true);
+        messageText.GetComponent<UnityEngine.UI.Text>().text = text;
+    }
+
+    public void exitGame() {
+        message.SetActive(false);
+        menu.SetActive(true);
+        boardManager.removeAllGameObjects();
+        boardManager.rollDisplay.GetComponent<UnityEngine.UI.Text>().text = "";
     }
 }

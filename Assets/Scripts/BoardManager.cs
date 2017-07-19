@@ -21,10 +21,10 @@ public class BoardManager : MonoBehaviour {
     private bool pieceIsMoving = false;
     public int rollValue = 0;
     public Pool[] startingPools = new Pool[2] { new Pool(), new Pool() };
-    private Pool[] endingPools = new Pool[2] { new Pool(), new Pool() };
+    public Pool[] endingPools = new Pool[2] { new Pool(), new Pool() };
     public PlayerColor turn;
 
-    private PlayerColor[] PlayerColors = new[] { PlayerColor.Black, PlayerColor.White };
+    public PlayerColor[] PlayerColors = new[] { PlayerColor.Black, PlayerColor.White };
 
     private bool extraTurn = false;
 
@@ -46,6 +46,8 @@ public class BoardManager : MonoBehaviour {
         board = new Board();
         pieces = new GameObject[8, 3];
         turn = PlayerColor.White;
+        scaleRatio = 0f;
+        tileWidth = 3.05f;
         drawBoard();
         createPools();
         createDice();
@@ -85,7 +87,7 @@ public class BoardManager : MonoBehaviour {
                 if(turn == PlayerColor.White) {
                     movePieceFromPool(rollValue, PlayerColor.White);
                 }
-            } else if (clickPosition == new Position(2, -1) || clickPosition == new Position(2, -1)) {
+            } else if (clickPosition == new Position(2, -1) || clickPosition == new Position(3, -1)) {
                 if(turn == PlayerColor.Black) {
                     movePieceFromPool(rollValue, PlayerColor.Black);
                 }
@@ -282,6 +284,14 @@ public class BoardManager : MonoBehaviour {
         float offsetX = (boardInstance.GetComponent<Renderer>().bounds.size.x / 2);
         float offsetY = ( (boardInstance.GetComponent<Renderer>().bounds.size.y / 2) - boardY);
         boardOffset = new Vector2(offsetX, offsetY);
+    }
+
+    //end game
+    public void removeAllGameObjects() {
+        GameObject[] gameObjects = GameObject.FindGameObjectsWithTag("GameObjects");
+        for (var i = 0; i < gameObjects.Length; i++) {
+            Destroy(gameObjects[i]);
+        }
     }
 
 
