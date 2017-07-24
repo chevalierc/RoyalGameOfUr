@@ -33,7 +33,7 @@ public class Pool {
     }
 
     public void checkIfFull() {
-        if(this.count == 7) {
+        if(this.count == 1) { //This is only 1 for testing game end screen
             this.full = true;
         }else {
             this.full = false;
