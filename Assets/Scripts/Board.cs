@@ -6,7 +6,12 @@ using UnityEngine;
 public enum PlayerColor { Black, White, Free };
 
 public class Board  {
+    //pieces
     private PlayerColor[,] pieces;
+    public int[] startingPoolCount;
+    public int[] endingPoolCount;
+
+    //static facts
     private static Position[][] paths;
     private static Position[] rosseteLocations;
 
@@ -96,6 +101,8 @@ public class Board  {
                 pieces[x, y] = PlayerColor.Free;
             }
         }
+        startingPoolCount = new int[]{7, 7};
+        endingPoolCount = new int[]{0, 0};
     }
 
     public Board(Board oldBoard) {
@@ -105,6 +112,12 @@ public class Board  {
                 pieces[x, y] = oldBoard.get(x,y);
             }
         }
+        startingPoolCount = new int[] {7, 7 };
+        endingPoolCount = new int[] {0, 0 };
+        startingPoolCount[(int)PlayerColor.Black] = oldBoard.startingPoolCount[(int)PlayerColor.Black];
+        startingPoolCount[(int)PlayerColor.White] = oldBoard.startingPoolCount[(int)PlayerColor.White];
+        endingPoolCount[(int)PlayerColor.Black] = oldBoard.endingPoolCount[(int)PlayerColor.Black];
+        endingPoolCount[(int)PlayerColor.White] = oldBoard.endingPoolCount[(int)PlayerColor.White]; ;
     }
 
     //getter/setters
@@ -132,6 +145,14 @@ public class Board  {
     public void move(Position start, Position end) {
         this.set(end, this.get(start));
         this.set(start, PlayerColor.Free);
+    }
+
+    public bool isWin(PlayerColor color) {
+        if(this.endingPoolCount[(int) color] == 7) {
+            return true;
+        }else {
+            return false;
+        }
     }
 
     //other

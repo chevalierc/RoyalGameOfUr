@@ -14,7 +14,6 @@ public class AI {
         Position[] positions = board.getPositionsForPlayer(aiColor);
 
         //check if you can move piece from pool
-        Debug.Log(boardManager.startingPools[(int)aiColor].count);
         if (board.isValidMove(null, roll, aiColor) && boardManager.startingPools[(int)aiColor].count != 0) {
             Position end = board.getLandingPositionFrom(null, roll, aiColor);
             Board newBoard = new Board(board);
@@ -68,6 +67,9 @@ public class AI {
             }
         }
 
+        //add 100 for all the pieces in the ending pool
+        score += 100 * board.endingPoolCount[(int)color];
+
         for (int i = 0; i < opponentPositions.Length; i++) {
             Position currentPosition = opponentPositions[i];
             score -= 20;
@@ -79,6 +81,25 @@ public class AI {
 
     /*
 
+    private class Node {
+        public Position move;
+        public int value;
+        public Board board;
+
+        public Node(Position move, int value) {
+            this.move = move;
+            this.value = value;
+        }
+    }
+
+    public static Position expectedminimax(Node node, int depth) {
+        if(node.board.endingPoolCount[]
+    }
+
+    */
+
+
+    /*
     private class Node {
         public Move move;
         public int value;
