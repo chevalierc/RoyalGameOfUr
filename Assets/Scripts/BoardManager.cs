@@ -139,7 +139,6 @@ public class BoardManager : MonoBehaviour {
                 }
                 //set ref in gameBoard class
                 board.set(end, color);
-                board.startingPoolCount[(int)color]--;
                 pieces[end.x, end.y] = piece;
             }else {
                 Debug.Log("No pieces left in pool");
@@ -206,7 +205,6 @@ public class BoardManager : MonoBehaviour {
         }
         Vector2 location = (position * tileWidth) - boardOffset;
         pieceToFinish.GetComponent<Piece>().move(location);
-        board.endingPoolCount[(int)color]++;
         finishPieceThisMove = false;
         //TODO: check for gameEnd
     }
@@ -222,7 +220,6 @@ public class BoardManager : MonoBehaviour {
         }
         Vector2 location = (position * tileWidth) - boardOffset;
         capturedPiece.GetComponent<Piece>().move(location);
-        board.startingPoolCount[(int)opponentColor]++;
         capturedPieceThisMove = false;
     }
 

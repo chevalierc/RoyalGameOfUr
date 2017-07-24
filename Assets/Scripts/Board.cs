@@ -117,7 +117,7 @@ public class Board  {
         startingPoolCount[(int)PlayerColor.Black] = oldBoard.startingPoolCount[(int)PlayerColor.Black];
         startingPoolCount[(int)PlayerColor.White] = oldBoard.startingPoolCount[(int)PlayerColor.White];
         endingPoolCount[(int)PlayerColor.Black] = oldBoard.endingPoolCount[(int)PlayerColor.Black];
-        endingPoolCount[(int)PlayerColor.White] = oldBoard.endingPoolCount[(int)PlayerColor.White]; ;
+        endingPoolCount[(int)PlayerColor.White] = oldBoard.endingPoolCount[(int)PlayerColor.White];
     }
 
     //getter/setters
@@ -142,9 +142,29 @@ public class Board  {
         this.pieces[x, y] = piece;
     }
 
+    public void aiMove(Position start, Position end, PlayerColor color) {
+        if( start == new Position(2, -1) || start == new Position(2, 3) ) {
+            moveFromPool(end, color);
+        }else {
+            move(start, end);
+        }
+    }
+
     public void move(Position start, Position end) {
-        this.set(end, this.get(start));
+        if(this.get(end) != PlayerColor.Free){
+            startingPoolCount[(int)this.get(end)]++;
+        }
+        if(Board.isGoal(end)){
+            endingPoolCount[(int)this.get(start)]++;
+        }else{
+            this.set(end, this.get(start) );
+        }
         this.set(start, PlayerColor.Free);
+    }
+
+    public void moveFromPool(Position end, PlayerColor color){
+        this.set(end, color);
+        startingPoolCount[(int)color]--;
     }
 
     public bool isWin(PlayerColor color) {
@@ -179,7 +199,7 @@ public class Board  {
         Position[] path = paths[(int)color];
 
         int index;
-        if (start == null) {
+        if (start == null || start == new Position(2,-1) || start == new Position(2,3) ) {
             index = -1;
         } else {
             index = System.Array.FindIndex(path, x => x == start); //find index in path of start position
@@ -191,7 +211,7 @@ public class Board  {
         }else {
             return null;
         }
-        
+
     }
 
     public bool hasNoMoves(PlayerColor color, int moves) {
@@ -206,6 +226,25 @@ public class Board  {
             return false;
         }
         return true;
+    }
+
+    public Position[] getValidMovesForPlayer(PlayerColor color, int moves){
+        Position[] currentPositions = getPositionsForPlayer(color);
+        List<Position> validMoves = new List<Position>();
+        for(var i = 0; i < currentPositions.Length; i++){
+            Position start = currentPositions[i];
+            if(isValidMove(start, moves, color)){
+                validMoves.Add(start);
+            }
+        }
+        if (isValidMove(null, moves, color)) {
+            if (color == PlayerColor.Black) {
+                validMoves.Add(new Position(2, -1));//clicking on the pool
+            } else {
+                validMoves.Add(new Position(2, 3));
+            }
+        }
+        return validMoves.ToArray();
     }
 
     public Position[] getPositionsForPlayer(PlayerColor color) {
