@@ -13,45 +13,49 @@ public class AI {
 
     public static int evalutateBoard(Board board, PlayerColor player) {
         int score = 0;
+        int multiplier = 1;
 
         for (int p = 0; p < 2; p++) {
             //for which player
             PlayerColor color;
             if (p == 0) {
                 color = player;
+                multiplier = 1;
             } else {
                 color = Board.otherColor(player);
+                multiplier = -1;
             }
-            Position[] posiions = board.getPositionsForPlayer(color);
+            Position[] positons = board.getPositionsForPlayer(color);
 
-            for (int i = 0; i < posiions.Length; i++) {
-                Position currentPosition = posiions[i];
-                //add 10 for being on rossete
-                if (Board.isRossete(currentPosition)) {
-                    score += 25;
+            for (int i = 0; i < positons.Length; i++) {
+                Position currentPosition = positons[i];
+                
+                if (currentPosition == new Position(3, 1)) {
+                    //if location is contested rossette
+                    score += 40 * multiplier;
+                } else if (Board.isRossete(currentPosition)) {
+                    score += 20*multiplier;
                 }
 
-                //add 10 for being in safe row, 3 for contested row
-                
-                if (currentPosition.y != 1) {
-                    score += 5;
+                if (currentPosition.y != 1 && !(currentPosition.x == 7 || currentPosition.x == 6) ) {
+                    //in first 4 add 5 (anything above 5 discourages it from stealing pieces)
+                    score += 5 * multiplier;
                 } else {
-                    score += 3;
+                    // if in contested row add distance from start to encourage moving pieces twords end of board
+                    score += board.distanceFromStart(currentPosition, color) * multiplier;
                 }
             }
 
             //add 100 for all the pieces in the ending pool
-            score += 100 * board.endingPoolCount[(int)color];
+            score += 100 * board.endingPoolCount[(int)color] * multiplier;
         }
-        Debug.Log(player);
-        Debug.Log(score);
         return score;
     }
 
     public static Position getBestClick(BoardManager boardManager, PlayerColor aiColor) {
         Board board = boardManager.board;
         int roll = boardManager.rollValue;
-        int maxDepth = 2;
+        int maxDepth = 3;
         Board newBoard = new Board(board);
         Node bestNode = value(board, true, 0, maxDepth, aiColor, roll);
         Position bestClick = bestNode.move;
@@ -73,9 +77,7 @@ public class AI {
     }
 
     private static Node value(Board currentBoard, bool aiTurn, int curDepth, int maxDepth, PlayerColor color, int existingRoll) {
-        if (aiTurn) {
-            curDepth++;
-        }
+        curDepth++;
 
         if (curDepth == maxDepth) {
             return new Node(null, evalutateBoard(currentBoard, color) );

@@ -175,6 +175,11 @@ public class Board  {
         }
     }
 
+    public int distanceFromStart(Position position, PlayerColor color) {
+        Position[] path = paths[(int)color];
+        return System.Array.FindIndex(path, x => x == position) + 1;
+    }
+
     //other
 
     public bool isPieceOfPlayer(Position location, PlayerColor color) {
@@ -237,7 +242,7 @@ public class Board  {
                 validMoves.Add(start);
             }
         }
-        if (isValidMove(null, moves, color)) {
+        if (isValidMove(null, moves, color) && this.startingPoolCount[(int)color] != 0) {
             if (color == PlayerColor.Black) {
                 validMoves.Add(new Position(2, -1));//clicking on the pool
             } else {

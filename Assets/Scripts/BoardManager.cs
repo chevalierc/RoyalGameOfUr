@@ -61,6 +61,7 @@ public class BoardManager : MonoBehaviour {
         if (roll == 0) {
             StartCoroutine(zeroRoll());
         }else if (board.hasNoMoves(turn, roll)) {
+            rollDisplay.GetComponent<UnityEngine.UI.Text>().text = turn + " rolled a " + rollValue + " but has no legal moves.";
             StartCoroutine(zeroRoll());
         }
     }
@@ -138,7 +139,7 @@ public class BoardManager : MonoBehaviour {
                     extraTurn = true;
                 }
                 //set ref in gameBoard class
-                board.set(end, color);
+                board.moveFromPool(end, color);
                 pieces[end.x, end.y] = piece;
             }else {
                 Debug.Log("No pieces left in pool");
