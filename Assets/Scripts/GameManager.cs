@@ -61,6 +61,8 @@ public class GameManager : MonoBehaviour {
                 boardManager.dice.GetComponent<Dice>().setActive();
             }
         }
+        Debug.Log(boardManager.board.startingPoolCount[0]);
+        Debug.Log(boardManager.board.startingPoolCount[1]);
     }
 
     private void doAiTurn() {

@@ -3,167 +3,146 @@ using System.Collections.Generic;
 using UnityEngine;
 
 public class AI {
+    private static float[] rollProbability = new float[]{
+        0.0625f,
+        0.25f,
+        0.375f,
+        0.25f,
+        0.0625f
+    };
+
+    public static int evalutateBoard(Board board, PlayerColor player) {
+        int score = 0;
+        int multiplier = 1;
+
+        for (int p = 0; p < 2; p++) {
+            //for which player
+            PlayerColor color;
+            if (p == 0) {
+                color = player;
+                multiplier = 1;
+            } else {
+                color = Board.otherColor(player);
+                multiplier = -1;
+            }
+            Position[] positons = board.getPositionsForPlayer(color);
+
+            for (int i = 0; i < positons.Length; i++) {
+                Position currentPosition = positons[i];
+                
+                if (currentPosition == new Position(3, 1)) {
+                    //if location is contested rossette
+                    score += 40 * multiplier;
+                } else if (Board.isRossete(currentPosition)) {
+                    score += 20*multiplier;
+                }
+
+                if (currentPosition.y != 1 && !(currentPosition.x == 7 || currentPosition.x == 6) ) {
+                    //in first 4 add 5 (anything above 5 discourages it from stealing pieces)
+                    score += 5 * multiplier;
+                } else {
+                    // if in contested row add distance from start to encourage moving pieces twords end of board
+                    score += board.distanceFromStart(currentPosition, color) * multiplier;
+                }
+            }
+
+            //add 100 for all the pieces in the ending pool
+            score += 100 * board.endingPoolCount[(int)color] * multiplier;
+        }
+        return score;
+    }
 
     public static Position getBestClick(BoardManager boardManager, PlayerColor aiColor) {
         Board board = boardManager.board;
         int roll = boardManager.rollValue;
+        int maxDepth = 3;
+        Board newBoard = new Board(board);
+        Node bestNode = value(board, true, 0, maxDepth, aiColor, roll);
+        Position bestClick = bestNode.move;
 
-        Position bestClick = null;
-        int bestMoveScore = int.MinValue;
-
-        Position[] positions = board.getPositionsForPlayer(aiColor);
-
-        //check if you can move piece from pool
-        Debug.Log(boardManager.startingPools[(int)aiColor].count);
-        if (board.isValidMove(null, roll, aiColor) && boardManager.startingPools[(int)aiColor].count != 0) {
-            Position end = board.getLandingPositionFrom(null, roll, aiColor);
-            Board newBoard = new Board(board);
-            newBoard.set(end, aiColor);
-            int boardValue = evalutateBoard(newBoard, aiColor);
-            bestClick = new Position(2, -1);
-            bestMoveScore = boardValue;
-        }
-
-        for (int i = 0; i < positions.Length; i++) {
-            Position start = positions[i];
-            if (!board.isValidMove(start, roll, aiColor)) {
-                continue;
-            }
-
-            Position end = board.getLandingPositionFrom(positions[i], roll, aiColor);
-            Board newBoard = new Board(board);
-            newBoard.move(start, end);
-            int boardValue = evalutateBoard(newBoard, aiColor);
-            if(boardValue > bestMoveScore || bestClick == null) {
-                bestClick = start;
-                bestMoveScore = boardValue;
-            }
-        }
+        Debug.Log(bestClick);
 
         return bestClick;
     }
 
-    public static int evalutateBoard(Board board, PlayerColor color) {
-        int score = 0;
-        PlayerColor opponentColor = Board.otherColor(color);
-        Position[] myPositions = board.getPositionsForPlayer(color);
-        Position[] opponentPositions = board.getPositionsForPlayer(opponentColor);
-
-        for(int i = 0; i < myPositions.Length; i++) {
-            Position currentPosition = myPositions[i];
-            //if goal add 100
-            if (Board.isGoal(currentPosition)) {
-                score += 100;
-            }
-            //add 10 for being on rossete
-            if (Board.isRossete(currentPosition)) {
-                score += 25;
-            }
-
-            //add 10 for being in safe row, 3 for contested row
-            if (currentPosition.y != 1) {
-                score += 5;
-            }else {
-                score += 3;
-            }
-        }
-
-        for (int i = 0; i < opponentPositions.Length; i++) {
-            Position currentPosition = opponentPositions[i];
-            score -= 20;
-        }
-
-        Debug.Log("Score" + score);
-        return score;
-    }
-
-    /*
-
     private class Node {
-        public Move move;
-        public int value;
+        public Position move;
+        public float value;
+        public Board board;
 
-        public Node(Move move, int value) {
+        public Node(Position move, float value) {
             this.move = move;
             this.value = value;
         }
     }
 
-    public static Move getBestMove(Board currentBoard) {
-        int maxDepth = 2;
-        int alpha = int.MaxValue;
-        int beta = int.MinValue;
-
-        Board board = new Board(currentBoard);
-
-        Node bestNode = value(board, true, alpha, beta, 0, maxDepth);
-
-        return bestNode.move;
-    }
-
-    private static Node value(Board currentBoard, bool aiTurn, int alpha, int beta, int curDepth, int maxDepth) {
-        if (aiTurn) {
-            curDepth++;
-        }
+    private static Node value(Board currentBoard, bool aiTurn, int curDepth, int maxDepth, PlayerColor color, int existingRoll) {
+        curDepth++;
 
         if (curDepth == maxDepth) {
-            return new Node(null, currentBoard.getBoardScore() );
+            return new Node(null, evalutateBoard(currentBoard, color) );
         }
 
-        return minMax(currentBoard, aiTurn, alpha, beta, curDepth, maxDepth);
+        if(existingRoll != -1) {
+            return minMaxOfProbability(currentBoard, aiTurn, curDepth, maxDepth, color, existingRoll);
+        }
+
+        return minMax(currentBoard, aiTurn, curDepth, maxDepth, color);
     }
 
-    private static Node minMax(Board currentBoard, bool isAiTurn, int alpha, int beta, int curDepth, int maxDepth) {
+    private static Node minMax(Board currentBoard, bool isAiTurn, int curDepth, int maxDepth, PlayerColor color) {
         Node minOrMaxNode = new Node(null, 0);
+        for (int roll = 1; roll < rollProbability.Length; roll++){
+            Node currentBestNode = minMaxOfProbability(currentBoard, isAiTurn, curDepth, maxDepth, color, roll);
 
-        Move[] possibleMoves = currentBoard.getPossibleMovesFor(isAiTurn);
-        for (var i = 0; i < possibleMoves.Length; i++) {
-            Move move = possibleMoves[i];
-            Board newBoard = currentBoard.getBoardAfterMove(move);
-
-            int boardValue = value(newBoard, !isAiTurn, alpha, beta, curDepth, maxDepth).value;
-
-            //set min max node
             if (minOrMaxNode.move == null) {
-                minOrMaxNode = new Node(move, boardValue);
+                minOrMaxNode = currentBestNode;
             } else {
-                //player turn. Maximize score
                 if (!isAiTurn) {
-                    if (boardValue > minOrMaxNode.value) {
-                        minOrMaxNode = new Node(move, boardValue);
+                    if (currentBestNode.value < minOrMaxNode.value) {
+                        minOrMaxNode = currentBestNode;
                     }
-                    //ai turn. Minimize score
                 } else {
-                    if (boardValue < minOrMaxNode.value) {
-                        minOrMaxNode = new Node(move, boardValue);
+                    if (currentBestNode.value > minOrMaxNode.value) {
+                        minOrMaxNode = currentBestNode;
                     }
                 }
             }
-
-            //set alpha/beta
-
-            if(isAiTurn) {
-                if(boardValue > beta) {
-                    return new Node(move, boardValue);
-                }
-                if(alpha < boardValue) {
-                    alpha = boardValue;
-                }
-            }else {
-                if (boardValue < alpha) {
-                    return new Node(move, boardValue);
-                }
-                if (beta > boardValue) {
-                    beta = boardValue;
-                }
-            }
-
 
         }
 
         return minOrMaxNode;
     }
 
-    */
+    private static Node minMaxOfProbability(Board currentBoard, bool isAiTurn, int curDepth, int maxDepth, PlayerColor color, int roll) {
+        Node minOrMaxNode = new Node(null, 0);
+        float probability = rollProbability[roll];
+        Position[] possiblePositionOfPiecesToMove = currentBoard.getValidMovesForPlayer(color, roll);
+        for (var i = 0; i < possiblePositionOfPiecesToMove.Length; i++) {
+            Position start = possiblePositionOfPiecesToMove[i];
+            Position end = currentBoard.getLandingPositionFrom(start, roll, color);
+            Board newBoard = new Board(currentBoard);
+            newBoard.aiMove(start, end, color);
+
+            float boardValue = value(newBoard, !isAiTurn, curDepth, maxDepth, Board.otherColor(color), -1).value * probability;
+
+            //set min max node
+            if (minOrMaxNode.move == null) {
+                minOrMaxNode = new Node(start, boardValue);
+            } else {
+                if (!isAiTurn) {
+                    if (boardValue < minOrMaxNode.value) {
+                        minOrMaxNode = new Node(start, boardValue);
+                    }
+                }else {
+                    if (boardValue > minOrMaxNode.value) {
+                        minOrMaxNode = new Node(start, boardValue);
+                    }
+                }
+
+            }
+        }
+        return minOrMaxNode;
+    }
 
 }
