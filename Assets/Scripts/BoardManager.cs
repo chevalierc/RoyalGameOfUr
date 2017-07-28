@@ -227,18 +227,16 @@ public class BoardManager : MonoBehaviour {
     //initialization
 
     private void createDice() {
-        float screenHeight = 2f * Camera.main.orthographicSize;
-        float screenWidth = screenHeight * Camera.main.aspect;
-        float diceWidth = boardPrefab.GetComponent<Renderer>().bounds.size.x;
-        float diceHeight = boardPrefab.GetComponent<Renderer>().bounds.size.y;
-
-        Vector2 location = new Vector2(-(screenWidth - diceWidth) / 2f,-(screenHeight- diceHeight) / 2f);
-        location = Camera.main.ScreenToWorldPoint(location);
-
         GameObject dice = dicePrefab;
-        GameObject instance = Instantiate(dice, location, Quaternion.identity) as GameObject;
+        GameObject instance = Instantiate(dice, new Vector2(0,0), Quaternion.identity) as GameObject;
+
+        Vector2 location = Camera.main.ViewportToWorldPoint(new Vector2(0, 0));
+        instance.transform.localScale = new Vector3(scaleRatio, scaleRatio, 0);
+        location.x += instance.GetComponent<Renderer>().bounds.size.x / 2f;
+        location.y += instance.GetComponent<Renderer>().bounds.size.y / 2f;
+        instance.transform.position = location;
+
         instance.GetComponent<Dice>().boardManager = this;
-        //instance.transform.localScale = new Vector3(scaleRatio, scaleRatio, 0);
         this.dice = instance;
     }
 
