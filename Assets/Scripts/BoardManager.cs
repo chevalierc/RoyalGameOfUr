@@ -45,13 +45,14 @@ public class BoardManager : MonoBehaviour {
     public void setUpNewGame() {
         board = new Board();
         pieces = new GameObject[8, 3];
-        turn = PlayerColor.White;
+        turn = PlayerColor.Black; //opposite of who goes first
         scaleRatio = 0f;
         tileWidth = 3.05f;
         drawBoard();
         createPools();
         createDice();
         rollDisplay.GetComponent<UnityEngine.UI.Text>().text = turn + " 's turn";
+        endMove();
     }
 
     public void onDiceRoll(int roll) {

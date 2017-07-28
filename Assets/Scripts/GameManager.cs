@@ -13,18 +13,34 @@ public class GameManager : MonoBehaviour {
     GameObject menu;
     GameObject message;
     GameObject messageText;
+    GameObject singlePlayerSetting;
 
-	void Start () {
+    void Start () {
         boardManager = gameObject.GetComponent<BoardManager>();
         menu = GameObject.FindGameObjectWithTag("Menu");
         message = GameObject.FindGameObjectWithTag("Message");
         messageText = GameObject.FindGameObjectWithTag("MessageText");
         message.SetActive(false);
+        singlePlayerSetting = GameObject.FindGameObjectWithTag("SinglePlayerSettings");
+        singlePlayerSetting.SetActive(false);
     }
 
     public void startSinglePlayer() {
         is2p = false;
         menu.SetActive(false);
+        singlePlayerSetting.SetActive(true);
+    }
+
+    public void startSinglePlayerAsWhite() {
+        singlePlayerSetting.SetActive(false);
+        playerColor = PlayerColor.White;
+        gameIsBeingPlayed = true;
+        boardManager.setUpNewGame();
+    }
+
+    public void startSinglePlayerAsBlack() {
+        singlePlayerSetting.SetActive(false);
+        playerColor = PlayerColor.Black;
         gameIsBeingPlayed = true;
         boardManager.setUpNewGame();
     }
