@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+//using System.Media;
 using UnityEngine;
 
 public enum PlayerColor { Black, White, Free };
@@ -146,7 +147,7 @@ public class Board  {
         if( start == new Position(2, -1) || start == new Position(2, 3) ) {
             moveFromPool(end, color);
         }else {
-            move(start, end);
+            move(start, end);		
         }
     }
 

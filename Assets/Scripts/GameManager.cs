@@ -14,6 +14,9 @@ public class GameManager : MonoBehaviour {
     GameObject message;
     GameObject messageText;
     GameObject singlePlayerSetting;
+	GameObject rules;
+	GameObject rulesText;
+	GameObject rulesPicture;
 
     void Start () {
         boardManager = gameObject.GetComponent<BoardManager>();
@@ -23,6 +26,12 @@ public class GameManager : MonoBehaviour {
         message.SetActive(false);
         singlePlayerSetting = GameObject.FindGameObjectWithTag("SinglePlayerSettings");
         singlePlayerSetting.SetActive(false);
+		rules = GameObject.FindGameObjectWithTag("RulesPage");
+		rules.SetActive(false);
+		rulesText = GameObject.FindGameObjectWithTag("RulesText");
+		rulesText.SetActive (false);
+		rulesPicture = GameObject.FindGameObjectWithTag("RulesPicture");
+		rulesPicture.SetActive (false);
     }
 
     public void startSinglePlayer() {
@@ -119,6 +128,7 @@ public class GameManager : MonoBehaviour {
     public void exitGame() {
         message.SetActive(false);
         menu.SetActive(true);
+        singlePlayerSetting.SetActive(false);  
         boardManager.removeAllGameObjects();
         boardManager.rollDisplay.GetComponent<UnityEngine.UI.Text>().text = "";
     }

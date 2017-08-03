@@ -5,7 +5,7 @@ using UnityEngine;
 public class Piece : MonoBehaviour {
     public Sprite blackSprite;
     public Sprite whiteSprite;
-    public float moveTime = 0.1f;
+    public float moveTime = 0.5f;
     public PlayerColor color;
     public BoardManager boardManager;
 
