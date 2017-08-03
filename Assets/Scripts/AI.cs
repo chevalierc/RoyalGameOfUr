@@ -38,8 +38,8 @@ public class AI {
                 }
 
                 if (currentPosition.y != 1 && !(currentPosition.x == 7 || currentPosition.x == 6) ) {
-                    //in first 4 add 5 (anything above 5 discourages it from stealing pieces)
-                    score += 5 * multiplier;
+                    //in first 4
+                    score += 10 * multiplier;
                 } else {
                     // if in contested row add distance from start to encourage moving pieces twords end of board
                     score += board.distanceFromStart(currentPosition, color) * multiplier;
@@ -55,7 +55,7 @@ public class AI {
     public static Position getBestClick(BoardManager boardManager, PlayerColor aiColor) {
         Board board = boardManager.board;
         int roll = boardManager.rollValue;
-        int maxDepth = 3;
+        int maxDepth = 6;
         Board newBoard = new Board(board);
         Node bestNode = value(board, true, 0, maxDepth, aiColor, roll);
         Position bestClick = bestNode.move;
