@@ -72,6 +72,7 @@ public class AI {
 
         public Node(Position move, float value) {
             this.move = move;
+
             this.value = value;
         }
     }
