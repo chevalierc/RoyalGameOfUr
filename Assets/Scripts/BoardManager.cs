@@ -173,9 +173,6 @@ public class BoardManager : MonoBehaviour {
             if (Board.isRossete(end)) {
                 extraTurn = true;
             }
-			//piece landing sound
-			//*******************
-            //move ref in gameBoard class and pieces array
             board.move(start, end);
             pieces[end.x, end.y] = pieces[start.x, start.y];
             pieces[start.x, start.y] = null;

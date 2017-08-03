@@ -1,6 +1,7 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.UI;
 
 public class Piece : MonoBehaviour {
     public Sprite blackSprite;
@@ -29,7 +30,7 @@ public class Piece : MonoBehaviour {
 
     public void move(Queue<Position> directions) {
         this.directions = directions;
-        StartCoroutine(SmoothMovement());
+        StartCoroutine(SmoothMovement(true));
     }
 
     public void move(Vector3 end) {
@@ -51,7 +52,7 @@ public class Piece : MonoBehaviour {
         boardManager.endMove();
     }
 
-    private IEnumerator SmoothMovement() {
+    private IEnumerator SmoothMovement(bool playSound) {
         gameObject.GetComponent<Renderer>().sortingLayerName = "MovingPiece";
         Position endPosition = directions.Dequeue();
         Vector3 end = boardManager.positionToVector(endPosition);
@@ -69,8 +70,16 @@ public class Piece : MonoBehaviour {
             sqrRemainingDistance = (transform.position - end).sqrMagnitude;
             yield return null;
         }
+		//piece movement sound
+		if (playSound) {
+			Debug.Log("sound played");
+			//play sound
+			AudioSource audio = GetComponent<AudioSource>();
+			//audio.loop = false;
+			audio.Play();
+		}
         if(directions.Count != 0) {
-            StartCoroutine(SmoothMovement());
+            StartCoroutine(SmoothMovement(true));
         }else {
             gameObject.GetComponent<Renderer>().sortingLayerName = "Piece";
             boardManager.endMove();
