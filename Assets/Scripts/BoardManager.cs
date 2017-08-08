@@ -27,6 +27,7 @@ public class BoardManager : MonoBehaviour {
     public PlayerColor[] PlayerColors = new[] { PlayerColor.Black, PlayerColor.White };
 
     private bool extraTurn = false;
+    private bool hasRolled;
 
     //capture piece
     bool capturedPieceThisMove = false;
@@ -57,6 +58,7 @@ public class BoardManager : MonoBehaviour {
 
     public void onDiceRoll(int roll) {
         rollValue = roll;
+        hasRolled = true;
         rollDisplay.GetComponent<UnityEngine.UI.Text>().text = turn + " rolled a " + rollValue;
         dice.GetComponent<Dice>().setDisabled();
         if (roll == 0) {
@@ -84,7 +86,7 @@ public class BoardManager : MonoBehaviour {
     //controll
 
     public void onClick(Position clickPosition) {
-        if (!pieceIsMoving && rollValue != 0) {
+        if (!pieceIsMoving && rollValue != 0 && hasRolled) {
             if( clickPosition == new Position(2,3) || clickPosition == new Position(3,3)) {
                 if(turn == PlayerColor.White) {
                     movePieceFromPool(rollValue, PlayerColor.White);
@@ -102,6 +104,7 @@ public class BoardManager : MonoBehaviour {
     //turn managment
 
     public void endMove() {
+        hasRolled = false;
         if (capturedPieceThisMove) {
             moveCapturedPiece();
         } else if (finishPieceThisMove) {
@@ -173,6 +176,8 @@ public class BoardManager : MonoBehaviour {
             if (Board.isRossete(end)) {
                 extraTurn = true;
             }
+			//piece landing sound
+			//*******************
             //move ref in gameBoard class and pieces array
             board.move(start, end);
             pieces[end.x, end.y] = pieces[start.x, start.y];

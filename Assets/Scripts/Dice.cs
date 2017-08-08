@@ -30,6 +30,8 @@ public class Dice : MonoBehaviour {
         for(int i = 0; i < 4; i++) {
             sum += Mathf.RoundToInt( Random.Range(0, 2) );//believe it or not this will return 0 or 1 equally
         }
+        AudioSource audio = GetComponent<AudioSource>();
+        audio.Play();
         roll = sum;
         boardManager.onDiceRoll(sum);
     }

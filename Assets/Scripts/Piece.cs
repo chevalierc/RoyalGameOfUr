@@ -1,11 +1,12 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.UI;
 
 public class Piece : MonoBehaviour {
     public Sprite blackSprite;
     public Sprite whiteSprite;
-    public float moveTime = 0.1f;
+    public float moveTime = 0.5f;
     public PlayerColor color;
     public BoardManager boardManager;
 
@@ -61,17 +62,21 @@ public class Piece : MonoBehaviour {
         Vector3 middle = ((Vector3)(rb2d.position) + end) * .5f;
         float startScale = gameObject.transform.localScale.x;
         while (sqrRemainingDistance > float.Epsilon) {
-            float distanceToMiddle = ( Mathf.Abs(middle.x - rb2d.position.x) + Mathf.Abs(middle.y - rb2d.position.y) );
+            float distanceToMiddle = (Mathf.Abs(middle.x - rb2d.position.x) + Mathf.Abs(middle.y - rb2d.position.y));
             float ratioToMiddle = 1 - distanceToMiddle / (totalDistance * .5f); //0 is ends, 1 is middle
             gameObject.transform.localScale = new Vector3(startScale + ratioToMiddle, startScale + ratioToMiddle, 0);
-            Vector3 newPosition = Vector3.MoveTowards(rb2d.position, end, inverseMoveTime * Time.deltaTime); 
+            Vector3 newPosition = Vector3.MoveTowards(rb2d.position, end, inverseMoveTime * Time.deltaTime);
             rb2d.MovePosition(newPosition);
             sqrRemainingDistance = (transform.position - end).sqrMagnitude;
             yield return null;
         }
-        if(directions.Count != 0) {
+        //piece movement sound
+        //play sound
+        AudioSource audio = GetComponent<AudioSource>();
+        audio.Play();
+        if (directions.Count != 0) {
             StartCoroutine(SmoothMovement());
-        }else {
+        } else {
             gameObject.GetComponent<Renderer>().sortingLayerName = "Piece";
             boardManager.endMove();
         }
