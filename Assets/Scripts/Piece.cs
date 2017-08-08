@@ -71,9 +71,9 @@ public class Piece : MonoBehaviour {
             yield return null;
         }
         //piece movement sound
-            //play sound
-            AudioSource audio = GetComponent<AudioSource>();
-            audio.Play();
+        //play sound
+        AudioSource audio = GetComponent<AudioSource>();
+        audio.Play();
         if (directions.Count != 0) {
             StartCoroutine(SmoothMovement());
         } else {
