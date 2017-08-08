@@ -38,6 +38,7 @@ public class GameManager : MonoBehaviour {
         is2p = false;
         menu.SetActive(false);
         singlePlayerSetting.SetActive(true);
+
     }
 
     public void startSinglePlayerAsWhite() {
